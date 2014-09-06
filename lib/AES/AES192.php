@@ -15,7 +15,12 @@ class AES192 extends AESBase
 
         list(,$rk0, $rk1, $rk2, $rk3, $rk4, $rk5) = unpack('N6', $key);
 
-        $rk = $rki = [$rk0, $rk1, $rk2, $rk3, $rk4, $rk5];
+        $rk = [$rk0, $rk1, $rk2, $rk3, $rk4, $rk5];
+        $rki = [
+            $rk0, $rk1, $rk2, $rk3,
+            $t0[$s[$rk4 >> 24 & 0xff]] ^ $t1[$s[$rk4 >> 16 & 0xff]] ^ $t2[$s[$rk4 >> 8 & 0xff]] ^ $t3[$s[$rk4 & 0xff]],
+            $t0[$s[$rk5 >> 24 & 0xff]] ^ $t1[$s[$rk5 >> 16 & 0xff]] ^ $t2[$s[$rk5 >> 8 & 0xff]] ^ $t3[$s[$rk5 & 0xff]]
+        ];
 
         for ($i = 6, $rc = 1; $i < 48; $rc = ($rc << 1) % 0xe5) {
             $rk[$i] = $rk0 = $rk0 ^ ($s[$rk5 >> 24 & 0xff] | ($s[$rk5 & 0xff] << 8) | ($s[$rk5 >> 8 & 0xff] << 16) | (($s[$rk5 >> 16 & 0xff] ^ $rc) << 24));
