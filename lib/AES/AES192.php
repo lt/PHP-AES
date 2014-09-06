@@ -7,7 +7,7 @@ class AES192 extends AESBase
         $s = $this->S;
         list(,$rk0, $rk1, $rk2, $rk3, $rk4, $rk5) = unpack('N6', $key);
 
-        $this->rk = [
+        $this->RK = [
             $rk0, $rk1, $rk2, $rk3, $rk4, $rk5,
             $rk0 = $rk0 ^ ($s[$rk5 >> 24 & 0xff] | ($s[$rk5 & 0xff] << 8) | ($s[$rk5 >> 8 & 0xff] << 16) | (($s[$rk5 >> 16 & 0xff] ^ 0x01) << 24)),
             $rk1 = $rk1 ^ $rk0, $rk2 = $rk2 ^ $rk1, $rk3 = $rk3 ^ $rk2, $rk4 = $rk4 ^ $rk3, $rk5 = $rk5 ^ $rk4,
@@ -35,7 +35,7 @@ class AES192 extends AESBase
         $t2 = $this->T2;
         $t3 = $this->T3;
         $s = $this->S;
-        $rk  = $this->rk;
+        $rk  = $this->RK;
 
         list(,$x0, $x1, $x2, $x3) = unpack('N4', $block);
 

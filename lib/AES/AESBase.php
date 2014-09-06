@@ -2,7 +2,8 @@
 
 abstract class AESBase
 {
-    protected $rk;
+    protected $RK;
+    protected $RKi;
 
     // Precomputed MixColumns tables
     protected $T0 = [
