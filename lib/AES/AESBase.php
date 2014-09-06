@@ -5,6 +5,9 @@ abstract class AESBase
     protected $RK;
     protected $RKi;
 
+    protected $eStop;
+    protected $dStart;
+
     // Precomputed MixColumns tables
     protected $T0 = [
         0xc66363a5, 0xf87c7c84, 0xee777799, 0xf67b7b8d, 0xfff2f20d, 0xd66b6bbd, 0xde6f6fb1, 0x91c5c554,
@@ -328,6 +331,98 @@ abstract class AESBase
     ];
 
     abstract function setKey($key);
-    abstract function encrypt($block);
-    abstract function decrypt($block);
+
+    function encrypt($block)
+    {
+        $t0 = $this->T0;
+        $t1 = $this->T1;
+        $t2 = $this->T2;
+        $t3 = $this->T3;
+        $s = $this->S;
+        $rk  = $this->RK;
+        $max = $this->eStop;
+
+        list(,$x0, $x1, $x2, $x3) = unpack('N4', $block);
+
+        $x0 ^= $rk[0];
+        $x1 ^= $rk[1];
+        $x2 ^= $rk[2];
+        $x3 ^= $rk[3];
+
+        for ($i = 4; $i < $max;) {
+            $y0 = $t0[$x0 >> 24 & 0xff] ^ $t1[$x1 >> 16 & 0xff] ^ $t2[$x2 >> 8 & 0xff] ^ $t3[$x3 & 0xff] ^ $rk[$i++];
+            $y1 = $t0[$x1 >> 24 & 0xff] ^ $t1[$x2 >> 16 & 0xff] ^ $t2[$x3 >> 8 & 0xff] ^ $t3[$x0 & 0xff] ^ $rk[$i++];
+            $y2 = $t0[$x2 >> 24 & 0xff] ^ $t1[$x3 >> 16 & 0xff] ^ $t2[$x0 >> 8 & 0xff] ^ $t3[$x1 & 0xff] ^ $rk[$i++];
+            $y3 = $t0[$x3 >> 24 & 0xff] ^ $t1[$x0 >> 16 & 0xff] ^ $t2[$x1 >> 8 & 0xff] ^ $t3[$x2 & 0xff] ^ $rk[$i++];
+
+            $x0 = $t0[$y0 >> 24 & 0xff] ^ $t1[$y1 >> 16 & 0xff] ^ $t2[$y2 >> 8 & 0xff] ^ $t3[$y3 & 0xff] ^ $rk[$i++];
+            $x1 = $t0[$y1 >> 24 & 0xff] ^ $t1[$y2 >> 16 & 0xff] ^ $t2[$y3 >> 8 & 0xff] ^ $t3[$y0 & 0xff] ^ $rk[$i++];
+            $x2 = $t0[$y2 >> 24 & 0xff] ^ $t1[$y3 >> 16 & 0xff] ^ $t2[$y0 >> 8 & 0xff] ^ $t3[$y1 & 0xff] ^ $rk[$i++];
+            $x3 = $t0[$y3 >> 24 & 0xff] ^ $t1[$y0 >> 16 & 0xff] ^ $t2[$y1 >> 8 & 0xff] ^ $t3[$y2 & 0xff] ^ $rk[$i++];
+        }
+
+        $y0 = $t0[$x0 >> 24 & 0xff] ^ $t1[$x1 >> 16 & 0xff] ^ $t2[$x2 >> 8 & 0xff] ^ $t3[$x3 & 0xff] ^ $rk[$i++];
+        $y1 = $t0[$x1 >> 24 & 0xff] ^ $t1[$x2 >> 16 & 0xff] ^ $t2[$x3 >> 8 & 0xff] ^ $t3[$x0 & 0xff] ^ $rk[$i++];
+        $y2 = $t0[$x2 >> 24 & 0xff] ^ $t1[$x3 >> 16 & 0xff] ^ $t2[$x0 >> 8 & 0xff] ^ $t3[$x1 & 0xff] ^ $rk[$i++];
+        $y3 = $t0[$x3 >> 24 & 0xff] ^ $t1[$x0 >> 16 & 0xff] ^ $t2[$x1 >> 8 & 0xff] ^ $t3[$x2 & 0xff] ^ $rk[$i++];
+
+        $x0 = $s[$y0 & 0xff] | ($s[$y0 >> 8 & 0xff] << 8) | ($s[$y0 >> 16 & 0xff] << 16) | $s[$y0 >> 24 & 0xff] << 24;
+        $x1 = $s[$y1 & 0xff] | ($s[$y1 >> 8 & 0xff] << 8) | ($s[$y1 >> 16 & 0xff] << 16) | $s[$y1 >> 24 & 0xff] << 24;
+        $x2 = $s[$y2 & 0xff] | ($s[$y2 >> 8 & 0xff] << 8) | ($s[$y2 >> 16 & 0xff] << 16) | $s[$y2 >> 24 & 0xff] << 24;
+        $x3 = $s[$y3 & 0xff] | ($s[$y3 >> 8 & 0xff] << 8) | ($s[$y3 >> 16 & 0xff] << 16) | $s[$y3 >> 24 & 0xff] << 24;
+
+        return pack('N4',
+            ($x0 & 0xff000000) ^ ($x1 & 0xff0000) ^ ($x2 & 0xff00) ^ ($x3 & 0xff) ^ $rk[$i++],
+            ($x1 & 0xff000000) ^ ($x2 & 0xff0000) ^ ($x3 & 0xff00) ^ ($x0 & 0xff) ^ $rk[$i++],
+            ($x2 & 0xff000000) ^ ($x3 & 0xff0000) ^ ($x0 & 0xff00) ^ ($x1 & 0xff) ^ $rk[$i++],
+            ($x3 & 0xff000000) ^ ($x0 & 0xff0000) ^ ($x1 & 0xff00) ^ ($x2 & 0xff) ^ $rk[$i]
+        );
+    }
+
+    function decrypt($block)
+    {
+        $t0 = $this->T0i;
+        $t1 = $this->T1i;
+        $t2 = $this->T2i;
+        $t3 = $this->T3i;
+        $s = $this->Si;
+        $rk  = $this->RKi;
+        $i = $this->dStart;
+
+        list(,$x0, $x1, $x2, $x3) = unpack('N4', $block);
+
+        $x3 ^= $rk[$i--];
+        $x2 ^= $rk[$i--];
+        $x1 ^= $rk[$i--];
+        $x0 ^= $rk[$i--];
+
+        while ($i > 7) {
+            $y3 = $t0[$x3 >> 24 & 0xff] ^ $t1[$x2 >> 16 & 0xff] ^ $t2[$x1 >> 8 & 0xff] ^ $t3[$x0 & 0xff] ^ $rk[$i--];
+            $y2 = $t0[$x2 >> 24 & 0xff] ^ $t1[$x1 >> 16 & 0xff] ^ $t2[$x0 >> 8 & 0xff] ^ $t3[$x3 & 0xff] ^ $rk[$i--];
+            $y1 = $t0[$x1 >> 24 & 0xff] ^ $t1[$x0 >> 16 & 0xff] ^ $t2[$x3 >> 8 & 0xff] ^ $t3[$x2 & 0xff] ^ $rk[$i--];
+            $y0 = $t0[$x0 >> 24 & 0xff] ^ $t1[$x3 >> 16 & 0xff] ^ $t2[$x2 >> 8 & 0xff] ^ $t3[$x1 & 0xff] ^ $rk[$i--];
+
+            $x3 = $t0[$y3 >> 24 & 0xff] ^ $t1[$y2 >> 16 & 0xff] ^ $t2[$y1 >> 8 & 0xff] ^ $t3[$y0 & 0xff] ^ $rk[$i--];
+            $x2 = $t0[$y2 >> 24 & 0xff] ^ $t1[$y1 >> 16 & 0xff] ^ $t2[$y0 >> 8 & 0xff] ^ $t3[$y3 & 0xff] ^ $rk[$i--];
+            $x1 = $t0[$y1 >> 24 & 0xff] ^ $t1[$y0 >> 16 & 0xff] ^ $t2[$y3 >> 8 & 0xff] ^ $t3[$y2 & 0xff] ^ $rk[$i--];
+            $x0 = $t0[$y0 >> 24 & 0xff] ^ $t1[$y3 >> 16 & 0xff] ^ $t2[$y2 >> 8 & 0xff] ^ $t3[$y1 & 0xff] ^ $rk[$i--];
+        }
+
+        $y0 = $t0[$x0 >> 24 & 0xff] ^ $t1[$x3 >> 16 & 0xff] ^ $t2[$x2 >> 8 & 0xff] ^ $t3[$x1 & 0xff] ^ $rk[4];
+        $y1 = $t0[$x1 >> 24 & 0xff] ^ $t1[$x0 >> 16 & 0xff] ^ $t2[$x3 >> 8 & 0xff] ^ $t3[$x2 & 0xff] ^ $rk[5];
+        $y2 = $t0[$x2 >> 24 & 0xff] ^ $t1[$x1 >> 16 & 0xff] ^ $t2[$x0 >> 8 & 0xff] ^ $t3[$x3 & 0xff] ^ $rk[6];
+        $y3 = $t0[$x3 >> 24 & 0xff] ^ $t1[$x2 >> 16 & 0xff] ^ $t2[$x1 >> 8 & 0xff] ^ $t3[$x0 & 0xff] ^ $rk[7];
+
+        $x0 = $s[$y0 & 0xff] | ($s[$y0 >> 8 & 0xff] << 8) | ($s[$y0 >> 16 & 0xff] << 16) | $s[$y0 >> 24 & 0xff] << 24;
+        $x1 = $s[$y1 & 0xff] | ($s[$y1 >> 8 & 0xff] << 8) | ($s[$y1 >> 16 & 0xff] << 16) | $s[$y1 >> 24 & 0xff] << 24;
+        $x2 = $s[$y2 & 0xff] | ($s[$y2 >> 8 & 0xff] << 8) | ($s[$y2 >> 16 & 0xff] << 16) | $s[$y2 >> 24 & 0xff] << 24;
+        $x3 = $s[$y3 & 0xff] | ($s[$y3 >> 8 & 0xff] << 8) | ($s[$y3 >> 16 & 0xff] << 16) | $s[$y3 >> 24 & 0xff] << 24;
+
+        return pack('N4',
+            ($x0 & 0xff000000) ^ ($x1 & 0xff0000) ^ ($x2 & 0xff00) ^ ($x3 & 0xff) ^ $rk[0],
+            ($x3 & 0xff000000) ^ ($x0 & 0xff0000) ^ ($x1 & 0xff00) ^ ($x2 & 0xff) ^ $rk[1],
+            ($x2 & 0xff000000) ^ ($x3 & 0xff0000) ^ ($x0 & 0xff00) ^ ($x1 & 0xff) ^ $rk[2],
+            ($x1 & 0xff000000) ^ ($x2 & 0xff0000) ^ ($x3 & 0xff00) ^ ($x0 & 0xff) ^ $rk[3]
+        );
+    }
 }
