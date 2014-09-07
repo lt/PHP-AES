@@ -1,6 +1,8 @@
 <?php
 
-class AES128 extends AESBase
+namespace AES\Cipher;
+
+class AES128 extends AESCipher
 {
     protected $eStop = 36;
     protected $dStart = 43;
