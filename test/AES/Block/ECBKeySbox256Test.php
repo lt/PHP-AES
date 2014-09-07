@@ -10,6 +10,7 @@
 namespace AES\Test;
 
 use AES\Block\AES256;
+use AES\Context;
 
 class ECBKeySbox256 extends \PHPUnit_Framework_TestCase
 {
@@ -41,8 +42,9 @@ class ECBKeySbox256 extends \PHPUnit_Framework_TestCase
     function testEncrypt($key, $plaintext, $ciphertext)
     {
         $aes = new AES256();
-        $aes->setKey(hex2bin($key));
-        $result = $aes->encrypt(hex2bin($plaintext));
+        $ctx = new Context();
+        $aes->init($ctx, hex2bin($key));
+        $result = $aes->encryptBlock($ctx, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -52,8 +54,9 @@ class ECBKeySbox256 extends \PHPUnit_Framework_TestCase
     function testDecrypt($key, $plaintext, $ciphertext)
     {
         $aes = new AES256();
-        $aes->setKey(hex2bin($key));
-        $result = $aes->decrypt(hex2bin($ciphertext));
+        $ctx = new Context();
+        $aes->init($ctx, hex2bin($key));
+        $result = $aes->decryptBlock($ctx, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

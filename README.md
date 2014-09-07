@@ -20,18 +20,32 @@ Stream cipher implementations are in the `AES\Stream` namespace. The following s
 ### Usage:
 
 ```
-\\ Instantiate a block cipher
-$aes = new AES\Block\AES128();
-$aes->setKey($key);
+// Instantiate a context
+$ctx = new \AES\Context();
 
-\\ Block operations can be performed with:
-$aes->encrypt($block);
-$aes->decryot($block);
+// Instantiate a block cipher
+$aes = new \AES\Block\AES128();
 
-\\ Stream operations can be performed with:
+// If you only want to perform single block operations (the same as a single block of ECB)
+$aes->init($ctx, $key);
+
+$aes->encryptBlock($ctx, $block);
+$aes->decryptBlock($ctx, $block);
+
+// If you want to stream data you'll need a seperate context for encryption and decryption (may change)
 $ctr = new AES\Stream\CTR();
-$ctr->encrypt($aes, $message, $nonce);
-$ctr->decrypt($aes, $message, $nonce);
+
+$ctr->init($ctxEnc, $aes, $key, $nonce);
+$ctxDec = clone $ctxEnc
+
+$ctr->encrypt($ctxEnc, $message, $final = false);
+$ctr->encrypt($ctxDec, $message, $final = false);
+
+// If the message is not a multiple of blocksize (16 bytes), the remainder is buffered.
+// If you are sending the entire message at once, or when you have sent the last block of the message
+// then $final must be set to true. This will apply padding (if neccessary) and return the last block
+$ctr->encrypt($ctxEnc, $message, $final = false);
+$ctr->encrypt($ctxDec, $message, $final = false);
 ```
 
 Remember if you are using block level encrypt/decrypt, blocks are assumed to be 16 bytes long.
@@ -39,7 +53,6 @@ Remember if you are using block level encrypt/decrypt, blocks are assumed to be 
 Stream modes are likely not in their final state, I'm still thinking about how to make them faster without a ton of code duplication.
 
 ### TODO:
- - Implement an AES Context for proper streaming
  - Padding options (i.e. stream->finish($ctx) would pad remaining buffer and return final block)
  - Implement crappy modes just because (OFB, CFB, etc.)
  - Implement some authenticated modes

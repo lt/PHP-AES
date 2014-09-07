@@ -10,6 +10,7 @@
 namespace AES\Test;
 
 use AES\Block\AES192;
+use AES\Context;
 
 class ECBKeySbox192 extends \PHPUnit_Framework_TestCase
 {
@@ -49,8 +50,9 @@ class ECBKeySbox192 extends \PHPUnit_Framework_TestCase
     function testEncrypt($key, $plaintext, $ciphertext)
     {
         $aes = new AES192();
-        $aes->setKey(hex2bin($key));
-        $result = $aes->encrypt(hex2bin($plaintext));
+        $ctx = new Context();
+        $aes->init($ctx, hex2bin($key));
+        $result = $aes->encryptBlock($ctx, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -60,8 +62,9 @@ class ECBKeySbox192 extends \PHPUnit_Framework_TestCase
     function testDecrypt($key, $plaintext, $ciphertext)
     {
         $aes = new AES192();
-        $aes->setKey(hex2bin($key));
-        $result = $aes->decrypt(hex2bin($ciphertext));
+        $ctx = new Context();
+        $aes->init($ctx, hex2bin($key));
+        $result = $aes->decryptBlock($ctx, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

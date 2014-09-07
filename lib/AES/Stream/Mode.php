@@ -2,7 +2,10 @@
 
 namespace AES\Stream;
 
-abstract class Mode
+use AES\Context;
+
+interface Mode
 {
-    function __construct() {}
-} 
+    function encrypt(Context $ctx, $message, $final = false);
+    function decrypt(Context $ctx, $message, $final = false);
+}

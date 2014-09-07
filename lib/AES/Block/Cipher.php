@@ -2,11 +2,10 @@
 
 namespace AES\Block;
 
+use AES\Context;
+
 abstract class Cipher
 {
-    protected $RK;
-    protected $RKi;
-
     protected $eStop;
     protected $dStart;
 
@@ -332,16 +331,16 @@ abstract class Cipher
         0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
     ];
 
-    abstract function setKey($key);
+    abstract function init(Context $ctx, $key);
 
-    function encrypt($block)
+    function encryptBlock(Context $ctx, $block)
     {
         $t0 = $this->T0;
         $t1 = $this->T1;
         $t2 = $this->T2;
         $t3 = $this->T3;
         $s = $this->S;
-        $rk  = $this->RK;
+        $rk  = $ctx->RK;
         $max = $this->eStop;
 
         list(,$x0, $x1, $x2, $x3) = unpack('N4', $block);
@@ -376,14 +375,14 @@ abstract class Cipher
         );
     }
 
-    function decrypt($block)
+    function decryptBlock(Context $ctx, $block)
     {
         $t0 = $this->T0i;
         $t1 = $this->T1i;
         $t2 = $this->T2i;
         $t3 = $this->T3i;
         $s = $this->Si;
-        $rk  = $this->RKi;
+        $rk  = $ctx->RKi;
         $i = $this->dStart;
 
         list(,$x0, $x1, $x2, $x3) = unpack('N4', $block);

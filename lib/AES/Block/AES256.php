@@ -2,12 +2,14 @@
 
 namespace AES\Block;
 
+use AES\Context;
+
 class AES256 extends Cipher
 {
     protected $eStop = 52;
     protected $dStart = 59;
 
-    function setKey($key)
+    function init(Context $ctx, $key)
     {
         $t0 = $this->T0i;
         $t1 = $this->T1i;
@@ -50,7 +52,9 @@ class AES256 extends Cipher
         $rk[58] = $rki[58] = $rk2 = $rk2 ^ $rk1;
         $rk[59] = $rki[59] = $rk3 ^ $rk2;
 
-        $this->RK = $rk;
-        $this->RKi = $rki;
+        $ctx->RK = $rk;
+        $ctx->RKi = $rki;
+        $ctx->keyLength = 32;
+        $ctx->blockCipher = $this;
     }
 }

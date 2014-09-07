@@ -2,38 +2,105 @@
 
 namespace AES\Stream;
 
+use AES\Context;
 use AES\Block\Cipher;
+use AES\Padding\Scheme;
+use AES\Padding\Zero;
 
-class CBC extends Mode
+class CBC implements Mode
 {
-    function encrypt(Cipher $cipher, $plaintext, $iv)
+    function init(Context $ctx, Cipher $cipher, $key, $iv, Scheme $padding = null)
     {
-        if (!is_string($plaintext) || ($messageLen = strlen($plaintext)) % 16 !== 0) {
-            throw new \InvalidArgumentException('Plaintext length must be a multiple of 16 bytes');
+        $cipher->init($ctx, $key);
+
+        if (is_null($padding)) {
+            $padding = new Zero();
+        }
+
+        $ctx->iv = $iv;
+        $ctx->padding = $padding;
+        $ctx->buffer = '';
+        $ctx->streamMode = $this;
+    }
+
+    function encrypt(Context $ctx, $message, $final = false)
+    {
+        if (!($ctx->streamMode instanceof $this)) {
+            throw new \InvalidArgumentException('Context not initialised for this stream mode');
+        }
+
+        if ($ctx->buffer) {
+            $message = $ctx->buffer . $message;
+            $ctx->buffer = '';
+        }
+
+        if ($final) {
+            $message .= $ctx->padding->getPadding($message);
         }
 
         $out = '';
         $offset = 0;
-        while ($offset < $messageLen) {
-            $out .= $iv = $cipher->encrypt(substr($plaintext, $offset, 16) ^ $iv);
+        $iv = $ctx->iv;
+        $cipher = $ctx->blockCipher;
+        $messageLen = strlen($message);
+        $blocks = $messageLen >> 4;
+
+        while ($blocks--) {
+            $out .= $iv = $cipher->encryptBlock($ctx, substr($message, $offset, 16) ^ $iv);
             $offset += 16;
+        }
+
+        if ($offset < $messageLen) {
+            $ctx->buffer = substr($message, $offset);
+        }
+
+        if ($final) {
+            $ctx = new Context();
+        }
+        else {
+            $ctx->iv = $iv;
         }
 
         return $out;
     }
 
-    function decrypt(Cipher $cipher, $ciphertext, $iv)
+    function decrypt(Context $ctx, $message, $final = false)
     {
-        if (!is_string($ciphertext) || ($messageLen = strlen($ciphertext)) % 16 !== 0) {
-            throw new \InvalidArgumentException('Ciphertext length must be a multiple of 16 bytes');
+        if (!($ctx->streamMode instanceof $this)) {
+            throw new \InvalidArgumentException('Context not initialised for this stream mode');
+        }
+
+        if ($ctx->buffer) {
+            $message = $ctx->buffer . $message;
+            $ctx->buffer = '';
         }
 
         $out = '';
         $offset = 0;
-        while ($offset < $messageLen) {
-            $out .= $cipher->decrypt($block = substr($ciphertext, $offset, 16)) ^ $iv;
+        $iv = $ctx->iv;
+        $cipher = $ctx->blockCipher;
+        $messageLen = strlen($message);
+        $blocks = $messageLen >> 4;
+
+        while ($blocks--) {
+            $out .= $cipher->decryptBlock($ctx, $block = substr($message, $offset, 16)) ^ $iv;
             $iv = $block;
             $offset += 16;
+        }
+
+        if ($offset < $messageLen) {
+            $ctx->buffer = substr($message, $offset);
+        }
+
+        if ($final) {
+            $padLen = $ctx->padding->getPadLen($message);
+            if ($padLen) {
+                $out = substr($out, -$padLen);
+            }
+            $ctx = new Context();
+        }
+        else {
+            $ctx->iv = $iv;
         }
 
         return $out;
