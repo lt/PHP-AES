@@ -17,6 +17,13 @@ Stream cipher implementations are in the `AES\Stream` namespace. The following s
  - CBC
  - CTR
 
+Padding implementations are in the `AES\Padding` namespace. The following padding schemes are present:
+
+ - PKCS7
+ - ANSI X.923
+ - ISO/IEC 7816
+ - Zero (pad with null characters)
+
 ### Usage:
 
 ```
