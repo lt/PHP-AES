@@ -7,9 +7,9 @@
 # Key Length : 256
 # Generated on Fri Apr 22 15:11:30 2011
 
-namespace AES;
+namespace AES\Test;
 
-use AES\Cipher\AES256;
+use AES\Block\AES256;
 
 class ECBVarTxt256 extends \PHPUnit_Framework_TestCase
 {

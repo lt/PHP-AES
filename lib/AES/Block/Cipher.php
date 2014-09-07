@@ -1,8 +1,8 @@
 <?php
 
-namespace AES\Cipher;
+namespace AES\Block;
 
-abstract class AESCipher
+abstract class Cipher
 {
     protected $RK;
     protected $RKi;

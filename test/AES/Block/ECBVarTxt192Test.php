@@ -7,9 +7,9 @@
 # Key Length : 192
 # Generated on Fri Apr 22 15:11:28 2011
 
-namespace AES;
+namespace AES\Test;
 
-use AES\Cipher\AES192;
+use AES\Block\AES192;
 
 class ECBVarTxt192 extends \PHPUnit_Framework_TestCase
 {

@@ -7,9 +7,9 @@
 # Key Length : 128
 # Generated on Fri Apr 22 15:11:26 2011
 
-namespace AES;
+namespace AES\Test;
 
-use AES\Cipher\AES128;
+use AES\Block\AES128;
 
 class ECBKeySbox128 extends \PHPUnit_Framework_TestCase
 {
