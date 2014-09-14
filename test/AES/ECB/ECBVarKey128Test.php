@@ -9,8 +9,8 @@
 
 namespace AES\Test;
 
-use AES\Block\AES128;
-use AES\Context;
+use AES\Mode\ECB;
+use AES\Context\ECB as Context;
 
 class ECBVarKey128 extends \PHPUnit_Framework_TestCase
 {
@@ -153,10 +153,9 @@ class ECBVarKey128 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $plaintext, $ciphertext)
     {
-        $aes = new AES128();
-        $ctx = new Context();
-        $aes->init($ctx, hex2bin($key));
-        $result = $aes->encryptBlock($ctx, hex2bin($plaintext));
+        $ctx = new Context(hex2bin($key));
+        $ecb = new ECB();
+        $result = $ecb->encrypt($ctx, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -165,10 +164,9 @@ class ECBVarKey128 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $plaintext, $ciphertext)
     {
-        $aes = new AES128();
-        $ctx = new Context();
-        $aes->init($ctx, hex2bin($key));
-        $result = $aes->decryptBlock($ctx, hex2bin($ciphertext));
+        $ctx = new Context(hex2bin($key));
+        $ecb = new ECB();
+        $result = $ecb->decrypt($ctx, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

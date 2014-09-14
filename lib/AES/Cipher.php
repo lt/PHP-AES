@@ -1,16 +1,11 @@
 <?php
 
-namespace AES\Block;
-
-use AES\Context;
+namespace AES;
 
 abstract class Cipher
 {
-    protected $eStop;
-    protected $dStart;
-
     // Precomputed MixColumns tables
-    private $T0 = [
+    static $T0 = [
         0xc66363a5, 0xf87c7c84, 0xee777799, 0xf67b7b8d, 0xfff2f20d, 0xd66b6bbd, 0xde6f6fb1, 0x91c5c554,
         0x60303050, 0x02010103, 0xce6767a9, 0x562b2b7d, 0xe7fefe19, 0xb5d7d762, 0x4dababe6, 0xec76769a,
         0x8fcaca45, 0x1f82829d, 0x89c9c940, 0xfa7d7d87, 0xeffafa15, 0xb25959eb, 0x8e4747c9, 0xfbf0f00b,
@@ -45,7 +40,7 @@ abstract class Cipher
         0x824141c3, 0x299999b0, 0x5a2d2d77, 0x1e0f0f11, 0x7bb0b0cb, 0xa85454fc, 0x6dbbbbd6, 0x2c16163a
     ];
 
-    private $T1 = [
+    static $T1 = [
         0xa5c66363, 0x84f87c7c, 0x99ee7777, 0x8df67b7b, 0x0dfff2f2, 0xbdd66b6b, 0xb1de6f6f, 0x5491c5c5,
         0x50603030, 0x03020101, 0xa9ce6767, 0x7d562b2b, 0x19e7fefe, 0x62b5d7d7, 0xe64dabab, 0x9aec7676,
         0x458fcaca, 0x9d1f8282, 0x4089c9c9, 0x87fa7d7d, 0x15effafa, 0xebb25959, 0xc98e4747, 0x0bfbf0f0,
@@ -80,7 +75,7 @@ abstract class Cipher
         0xc3824141, 0xb0299999, 0x775a2d2d, 0x111e0f0f, 0xcb7bb0b0, 0xfca85454, 0xd66dbbbb, 0x3a2c1616
     ];
 
-    protected $T2 = [
+    static $T2 = [
         0x63a5c663, 0x7c84f87c, 0x7799ee77, 0x7b8df67b, 0xf20dfff2, 0x6bbdd66b, 0x6fb1de6f, 0xc55491c5,
         0x30506030, 0x01030201, 0x67a9ce67, 0x2b7d562b, 0xfe19e7fe, 0xd762b5d7, 0xabe64dab, 0x769aec76,
         0xca458fca, 0x829d1f82, 0xc94089c9, 0x7d87fa7d, 0xfa15effa, 0x59ebb259, 0x47c98e47, 0xf00bfbf0,
@@ -115,7 +110,7 @@ abstract class Cipher
         0x41c38241, 0x99b02999, 0x2d775a2d, 0x0f111e0f, 0xb0cb7bb0, 0x54fca854, 0xbbd66dbb, 0x163a2c16
     ];
 
-    private $T3 = [
+    static $T3 = [
         0x6363a5c6, 0x7c7c84f8, 0x777799ee, 0x7b7b8df6, 0xf2f20dff, 0x6b6bbdd6, 0x6f6fb1de, 0xc5c55491,
         0x30305060, 0x01010302, 0x6767a9ce, 0x2b2b7d56, 0xfefe19e7, 0xd7d762b5, 0xababe64d, 0x76769aec,
         0xcaca458f, 0x82829d1f, 0xc9c94089, 0x7d7d87fa, 0xfafa15ef, 0x5959ebb2, 0x4747c98e, 0xf0f00bfb,
@@ -151,7 +146,7 @@ abstract class Cipher
     ];
 
     // Precomputed MixColumns tables inverse
-    protected $T0i = [
+    static $T0i = [
         0x51f4a750, 0x7e416553, 0x1a17a4c3, 0x3a275e96, 0x3bab6bcb, 0x1f9d45f1, 0xacfa58ab, 0x4be30393,
         0x2030fa55, 0xad766df6, 0x88cc7691, 0xf5024c25, 0x4fe5d7fc, 0xc52acbd7, 0x26354480, 0xb562a38f,
         0xdeb15a49, 0x25ba1b67, 0x45ea0e98, 0x5dfec0e1, 0xc32f7502, 0x814cf012, 0x8d4697a3, 0x6bd3f9c6,
@@ -186,7 +181,7 @@ abstract class Cipher
         0x39a80171, 0x080cb3de, 0xd8b4e49c, 0x6456c190, 0x7bcb8461, 0xd532b670, 0x486c5c74, 0xd0b85742
     ];
 
-    protected $T1i = [
+    static $T1i = [
         0x5051f4a7, 0x537e4165, 0xc31a17a4, 0x963a275e, 0xcb3bab6b, 0xf11f9d45, 0xabacfa58, 0x934be303,
         0x552030fa, 0xf6ad766d, 0x9188cc76, 0x25f5024c, 0xfc4fe5d7, 0xd7c52acb, 0x80263544, 0x8fb562a3,
         0x49deb15a, 0x6725ba1b, 0x9845ea0e, 0xe15dfec0, 0x02c32f75, 0x12814cf0, 0xa38d4697, 0xc66bd3f9,
@@ -221,7 +216,7 @@ abstract class Cipher
         0x7139a801, 0xde080cb3, 0x9cd8b4e4, 0x906456c1, 0x617bcb84, 0x70d532b6, 0x74486c5c, 0x42d0b857
     ];
 
-    protected $T2i = [
+    static $T2i = [
         0xa75051f4, 0x65537e41, 0xa4c31a17, 0x5e963a27, 0x6bcb3bab, 0x45f11f9d, 0x58abacfa, 0x03934be3,
         0xfa552030, 0x6df6ad76, 0x769188cc, 0x4c25f502, 0xd7fc4fe5, 0xcbd7c52a, 0x44802635, 0xa38fb562,
         0x5a49deb1, 0x1b6725ba, 0x0e9845ea, 0xc0e15dfe, 0x7502c32f, 0xf012814c, 0x97a38d46, 0xf9c66bd3,
@@ -256,7 +251,7 @@ abstract class Cipher
         0x017139a8, 0xb3de080c, 0xe49cd8b4, 0xc1906456, 0x84617bcb, 0xb670d532, 0x5c74486c, 0x5742d0b8
     ];
 
-    protected $T3i = [
+    static $T3i = [
         0xf4a75051, 0x4165537e, 0x17a4c31a, 0x275e963a, 0xab6bcb3b, 0x9d45f11f, 0xfa58abac, 0xe303934b,
         0x30fa5520, 0x766df6ad, 0xcc769188, 0x024c25f5, 0xe5d7fc4f, 0x2acbd7c5, 0x35448026, 0x62a38fb5,
         0xb15a49de, 0xba1b6725, 0xea0e9845, 0xfec0e15d, 0x2f7502c3, 0x4cf01281, 0x4697a38d, 0xd3f9c66b,
@@ -292,7 +287,7 @@ abstract class Cipher
     ];
 
     // SubBytes S-Box
-    protected $S = [
+    static $S = [
         0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
         0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
         0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
@@ -312,7 +307,7 @@ abstract class Cipher
     ];
 
     // SubBytes S-Box inverse
-    private $Si = [
+    static $Si = [
         0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
         0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44, 0xc4, 0xde, 0xe9, 0xcb,
         0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b, 0x42, 0xfa, 0xc3, 0x4e,
@@ -331,89 +326,367 @@ abstract class Cipher
         0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
     ];
 
-    abstract function init(Context $ctx, $key);
-
-    function encryptBlock(Context $ctx, $block)
+    static function generateKey($key)
     {
-        $t0 = $this->T0;
-        $t1 = $this->T1;
-        $t2 = $this->T2;
-        $t3 = $this->T3;
-        $s = $this->S;
-        $rk  = $ctx->RK;
-        $max = $this->eStop;
+        $t0 = self::$T0i;
+        $t1 = self::$T1i;
+        $t2 = self::$T2i;
+        $t3 = self::$T3i;
+        $s  = self::$S;
 
-        list(,$x0, $x1, $x2, $x3) = unpack('N4', $block);
+        $keyLen = strlen($key);
+        $pair = [2 => $keyLen];
 
-        $x0 ^= $rk[0];
-        $x1 ^= $rk[1];
-        $x2 ^= $rk[2];
-        $x3 ^= $rk[3];
+        switch ($keyLen) {
+            case 16:
+                list(,$rk0, $rk1, $rk2, $rk3) = unpack('N4', $key);
 
-        for ($i = 4; $i < $max;) {
-            $y0 = $t0[$x0 >> 24 & 0xff] ^ $t1[$x1 >> 16 & 0xff] ^ $t2[$x2 >> 8 & 0xff] ^ $t3[$x3 & 0xff] ^ $rk[$i++];
-            $y1 = $t0[$x1 >> 24 & 0xff] ^ $t1[$x2 >> 16 & 0xff] ^ $t2[$x3 >> 8 & 0xff] ^ $t3[$x0 & 0xff] ^ $rk[$i++];
-            $y2 = $t0[$x2 >> 24 & 0xff] ^ $t1[$x3 >> 16 & 0xff] ^ $t2[$x0 >> 8 & 0xff] ^ $t3[$x1 & 0xff] ^ $rk[$i++];
-            $y3 = $t0[$x3 >> 24 & 0xff] ^ $t1[$x0 >> 16 & 0xff] ^ $t2[$x1 >> 8 & 0xff] ^ $t3[$x2 & 0xff] ^ $rk[$i++];
+                $pair[0] = [
+                    $rk0,
+                    $rk1,
+                    $rk2,
+                    $rk3,
+                    $rk4 =  $rk0 ^ ($s[ $rk3 >> 24 & 0xff] | ($s[ $rk3 & 0xff] << 8) | ($s[ $rk3 >> 8 & 0xff] << 16) | (($s[ $rk3 >> 16 & 0xff] ^ 0x01) << 24)),
+                    $rk5 =  $rk1 ^ $rk4,
+                    $rk6 =  $rk2 ^ $rk5,
+                    $rk7 =  $rk3 ^ $rk6,
+                    $rk8 =  $rk4 ^ ($s[ $rk7 >> 24 & 0xff] | ($s[ $rk7 & 0xff] << 8) | ($s[ $rk7 >> 8 & 0xff] << 16) | (($s[ $rk7 >> 16 & 0xff] ^ 0x02) << 24)),
+                    $rk9 =  $rk5 ^ $rk8,
+                    $rk10 =  $rk6 ^ $rk9,
+                    $rk11 =  $rk7 ^ $rk10,
+                    $rk12 =  $rk8 ^ ($s[$rk11 >> 24 & 0xff] | ($s[$rk11 & 0xff] << 8) | ($s[$rk11 >> 8 & 0xff] << 16) | (($s[$rk11 >> 16 & 0xff] ^ 0x04) << 24)),
+                    $rk13 =  $rk9 ^ $rk12,
+                    $rk14 = $rk10 ^ $rk13,
+                    $rk15 = $rk11 ^ $rk14,
+                    $rk16 = $rk12 ^ ($s[$rk15 >> 24 & 0xff] | ($s[$rk15 & 0xff] << 8) | ($s[$rk15 >> 8 & 0xff] << 16) | (($s[$rk15 >> 16 & 0xff] ^ 0x08) << 24)),
+                    $rk17 = $rk13 ^ $rk16,
+                    $rk18 = $rk14 ^ $rk17,
+                    $rk19 = $rk15 ^ $rk18,
+                    $rk20 = $rk16 ^ ($s[$rk19 >> 24 & 0xff] | ($s[$rk19 & 0xff] << 8) | ($s[$rk19 >> 8 & 0xff] << 16) | (($s[$rk19 >> 16 & 0xff] ^ 0x10) << 24)),
+                    $rk21 = $rk17 ^ $rk20,
+                    $rk22 = $rk18 ^ $rk21,
+                    $rk23 = $rk19 ^ $rk22,
+                    $rk24 = $rk20 ^ ($s[$rk23 >> 24 & 0xff] | ($s[$rk23 & 0xff] << 8) | ($s[$rk23 >> 8 & 0xff] << 16) | (($s[$rk23 >> 16 & 0xff] ^ 0x20) << 24)),
+                    $rk25 = $rk21 ^ $rk24,
+                    $rk26 = $rk22 ^ $rk25,
+                    $rk27 = $rk23 ^ $rk26,
+                    $rk28 = $rk24 ^ ($s[$rk27 >> 24 & 0xff] | ($s[$rk27 & 0xff] << 8) | ($s[$rk27 >> 8 & 0xff] << 16) | (($s[$rk27 >> 16 & 0xff] ^ 0x40) << 24)),
+                    $rk29 = $rk25 ^ $rk28,
+                    $rk30 = $rk26 ^ $rk29,
+                    $rk31 = $rk27 ^ $rk30,
+                    $rk32 = $rk28 ^ ($s[$rk31 >> 24 & 0xff] | ($s[$rk31 & 0xff] << 8) | ($s[$rk31 >> 8 & 0xff] << 16) | (($s[$rk31 >> 16 & 0xff] ^ 0x80) << 24)),
+                    $rk33 = $rk29 ^ $rk32,
+                    $rk34 = $rk30 ^ $rk33,
+                    $rk35 = $rk31 ^ $rk34,
+                    $rk36 = $rk32 ^ ($s[$rk35 >> 24 & 0xff] | ($s[$rk35 & 0xff] << 8) | ($s[$rk35 >> 8 & 0xff] << 16) | (($s[$rk35 >> 16 & 0xff] ^ 0x1b) << 24)),
+                    $rk37 = $rk33 ^ $rk36,
+                    $rk38 = $rk34 ^ $rk37,
+                    $rk39 = $rk35 ^ $rk38,
+                56 =>
+                    $rk40 = $rk36 ^ ($s[$rk39 >> 24 & 0xff] | ($s[$rk39 & 0xff] << 8) | ($s[$rk39 >> 8 & 0xff] << 16) | (($s[$rk39 >> 16 & 0xff] ^ 0x36) << 24)),
+                    $rk41 = $rk37 ^ $rk40,
+                    $rk42 = $rk38 ^ $rk41,
+                    $rk43 = $rk39 ^ $rk42
+                ];
 
-            $x0 = $t0[$y0 >> 24 & 0xff] ^ $t1[$y1 >> 16 & 0xff] ^ $t2[$y2 >> 8 & 0xff] ^ $t3[$y3 & 0xff] ^ $rk[$i++];
-            $x1 = $t0[$y1 >> 24 & 0xff] ^ $t1[$y2 >> 16 & 0xff] ^ $t2[$y3 >> 8 & 0xff] ^ $t3[$y0 & 0xff] ^ $rk[$i++];
-            $x2 = $t0[$y2 >> 24 & 0xff] ^ $t1[$y3 >> 16 & 0xff] ^ $t2[$y0 >> 8 & 0xff] ^ $t3[$y1 & 0xff] ^ $rk[$i++];
-            $x3 = $t0[$y3 >> 24 & 0xff] ^ $t1[$y0 >> 16 & 0xff] ^ $t2[$y1 >> 8 & 0xff] ^ $t3[$y2 & 0xff] ^ $rk[$i++];
+                $pair[1] = [
+                    $rk0,
+                    $rk1,
+                    $rk2,
+                    $rk3,
+                    $t0[$s[ $rk4 >> 24 & 0xff]] ^ $t1[$s[ $rk4 >> 16 & 0xff]] ^ $t2[$s[ $rk4 >> 8 & 0xff]] ^ $t3[$s[ $rk4 & 0xff]],
+                    $t0[$s[ $rk5 >> 24 & 0xff]] ^ $t1[$s[ $rk5 >> 16 & 0xff]] ^ $t2[$s[ $rk5 >> 8 & 0xff]] ^ $t3[$s[ $rk5 & 0xff]],
+                    $t0[$s[ $rk6 >> 24 & 0xff]] ^ $t1[$s[ $rk6 >> 16 & 0xff]] ^ $t2[$s[ $rk6 >> 8 & 0xff]] ^ $t3[$s[ $rk6 & 0xff]],
+                    $t0[$s[ $rk7 >> 24 & 0xff]] ^ $t1[$s[ $rk7 >> 16 & 0xff]] ^ $t2[$s[ $rk7 >> 8 & 0xff]] ^ $t3[$s[ $rk7 & 0xff]],
+                    $t0[$s[ $rk8 >> 24 & 0xff]] ^ $t1[$s[ $rk8 >> 16 & 0xff]] ^ $t2[$s[ $rk8 >> 8 & 0xff]] ^ $t3[$s[ $rk8 & 0xff]],
+                    $t0[$s[ $rk9 >> 24 & 0xff]] ^ $t1[$s[ $rk9 >> 16 & 0xff]] ^ $t2[$s[ $rk9 >> 8 & 0xff]] ^ $t3[$s[ $rk9 & 0xff]],
+                    $t0[$s[$rk10 >> 24 & 0xff]] ^ $t1[$s[$rk10 >> 16 & 0xff]] ^ $t2[$s[$rk10 >> 8 & 0xff]] ^ $t3[$s[$rk10 & 0xff]],
+                    $t0[$s[$rk11 >> 24 & 0xff]] ^ $t1[$s[$rk11 >> 16 & 0xff]] ^ $t2[$s[$rk11 >> 8 & 0xff]] ^ $t3[$s[$rk11 & 0xff]],
+                    $t0[$s[$rk12 >> 24 & 0xff]] ^ $t1[$s[$rk12 >> 16 & 0xff]] ^ $t2[$s[$rk12 >> 8 & 0xff]] ^ $t3[$s[$rk12 & 0xff]],
+                    $t0[$s[$rk13 >> 24 & 0xff]] ^ $t1[$s[$rk13 >> 16 & 0xff]] ^ $t2[$s[$rk13 >> 8 & 0xff]] ^ $t3[$s[$rk13 & 0xff]],
+                    $t0[$s[$rk14 >> 24 & 0xff]] ^ $t1[$s[$rk14 >> 16 & 0xff]] ^ $t2[$s[$rk14 >> 8 & 0xff]] ^ $t3[$s[$rk14 & 0xff]],
+                    $t0[$s[$rk15 >> 24 & 0xff]] ^ $t1[$s[$rk15 >> 16 & 0xff]] ^ $t2[$s[$rk15 >> 8 & 0xff]] ^ $t3[$s[$rk15 & 0xff]],
+                    $t0[$s[$rk16 >> 24 & 0xff]] ^ $t1[$s[$rk16 >> 16 & 0xff]] ^ $t2[$s[$rk16 >> 8 & 0xff]] ^ $t3[$s[$rk16 & 0xff]],
+                    $t0[$s[$rk17 >> 24 & 0xff]] ^ $t1[$s[$rk17 >> 16 & 0xff]] ^ $t2[$s[$rk17 >> 8 & 0xff]] ^ $t3[$s[$rk17 & 0xff]],
+                    $t0[$s[$rk18 >> 24 & 0xff]] ^ $t1[$s[$rk18 >> 16 & 0xff]] ^ $t2[$s[$rk18 >> 8 & 0xff]] ^ $t3[$s[$rk18 & 0xff]],
+                    $t0[$s[$rk19 >> 24 & 0xff]] ^ $t1[$s[$rk19 >> 16 & 0xff]] ^ $t2[$s[$rk19 >> 8 & 0xff]] ^ $t3[$s[$rk19 & 0xff]],
+                    $t0[$s[$rk20 >> 24 & 0xff]] ^ $t1[$s[$rk20 >> 16 & 0xff]] ^ $t2[$s[$rk20 >> 8 & 0xff]] ^ $t3[$s[$rk20 & 0xff]],
+                    $t0[$s[$rk21 >> 24 & 0xff]] ^ $t1[$s[$rk21 >> 16 & 0xff]] ^ $t2[$s[$rk21 >> 8 & 0xff]] ^ $t3[$s[$rk21 & 0xff]],
+                    $t0[$s[$rk22 >> 24 & 0xff]] ^ $t1[$s[$rk22 >> 16 & 0xff]] ^ $t2[$s[$rk22 >> 8 & 0xff]] ^ $t3[$s[$rk22 & 0xff]],
+                    $t0[$s[$rk23 >> 24 & 0xff]] ^ $t1[$s[$rk23 >> 16 & 0xff]] ^ $t2[$s[$rk23 >> 8 & 0xff]] ^ $t3[$s[$rk23 & 0xff]],
+                    $t0[$s[$rk24 >> 24 & 0xff]] ^ $t1[$s[$rk24 >> 16 & 0xff]] ^ $t2[$s[$rk24 >> 8 & 0xff]] ^ $t3[$s[$rk24 & 0xff]],
+                    $t0[$s[$rk25 >> 24 & 0xff]] ^ $t1[$s[$rk25 >> 16 & 0xff]] ^ $t2[$s[$rk25 >> 8 & 0xff]] ^ $t3[$s[$rk25 & 0xff]],
+                    $t0[$s[$rk26 >> 24 & 0xff]] ^ $t1[$s[$rk26 >> 16 & 0xff]] ^ $t2[$s[$rk26 >> 8 & 0xff]] ^ $t3[$s[$rk26 & 0xff]],
+                    $t0[$s[$rk27 >> 24 & 0xff]] ^ $t1[$s[$rk27 >> 16 & 0xff]] ^ $t2[$s[$rk27 >> 8 & 0xff]] ^ $t3[$s[$rk27 & 0xff]],
+                    $t0[$s[$rk28 >> 24 & 0xff]] ^ $t1[$s[$rk28 >> 16 & 0xff]] ^ $t2[$s[$rk28 >> 8 & 0xff]] ^ $t3[$s[$rk28 & 0xff]],
+                    $t0[$s[$rk29 >> 24 & 0xff]] ^ $t1[$s[$rk29 >> 16 & 0xff]] ^ $t2[$s[$rk29 >> 8 & 0xff]] ^ $t3[$s[$rk29 & 0xff]],
+                    $t0[$s[$rk30 >> 24 & 0xff]] ^ $t1[$s[$rk30 >> 16 & 0xff]] ^ $t2[$s[$rk30 >> 8 & 0xff]] ^ $t3[$s[$rk30 & 0xff]],
+                    $t0[$s[$rk31 >> 24 & 0xff]] ^ $t1[$s[$rk31 >> 16 & 0xff]] ^ $t2[$s[$rk31 >> 8 & 0xff]] ^ $t3[$s[$rk31 & 0xff]],
+                    $t0[$s[$rk32 >> 24 & 0xff]] ^ $t1[$s[$rk32 >> 16 & 0xff]] ^ $t2[$s[$rk32 >> 8 & 0xff]] ^ $t3[$s[$rk32 & 0xff]],
+                    $t0[$s[$rk33 >> 24 & 0xff]] ^ $t1[$s[$rk33 >> 16 & 0xff]] ^ $t2[$s[$rk33 >> 8 & 0xff]] ^ $t3[$s[$rk33 & 0xff]],
+                    $t0[$s[$rk34 >> 24 & 0xff]] ^ $t1[$s[$rk34 >> 16 & 0xff]] ^ $t2[$s[$rk34 >> 8 & 0xff]] ^ $t3[$s[$rk34 & 0xff]],
+                    $t0[$s[$rk35 >> 24 & 0xff]] ^ $t1[$s[$rk35 >> 16 & 0xff]] ^ $t2[$s[$rk35 >> 8 & 0xff]] ^ $t3[$s[$rk35 & 0xff]],
+                    $t0[$s[$rk36 >> 24 & 0xff]] ^ $t1[$s[$rk36 >> 16 & 0xff]] ^ $t2[$s[$rk36 >> 8 & 0xff]] ^ $t3[$s[$rk36 & 0xff]],
+                    $t0[$s[$rk37 >> 24 & 0xff]] ^ $t1[$s[$rk37 >> 16 & 0xff]] ^ $t2[$s[$rk37 >> 8 & 0xff]] ^ $t3[$s[$rk37 & 0xff]],
+                    $t0[$s[$rk38 >> 24 & 0xff]] ^ $t1[$s[$rk38 >> 16 & 0xff]] ^ $t2[$s[$rk38 >> 8 & 0xff]] ^ $t3[$s[$rk38 & 0xff]],
+                    $t0[$s[$rk39 >> 24 & 0xff]] ^ $t1[$s[$rk39 >> 16 & 0xff]] ^ $t2[$s[$rk39 >> 8 & 0xff]] ^ $t3[$s[$rk39 & 0xff]],
+                56 =>
+                    $rk40,
+                    $rk41,
+                    $rk42,
+                    $rk43,
+                ];
+                break;
+            case 24:
+                list(,$rk0, $rk1, $rk2, $rk3, $rk4, $rk5) = unpack('N6', $key);
+
+                $pair[0] = [
+                    $rk0,
+                    $rk1,
+                    $rk2,
+                    $rk3,
+                    $rk4,
+                    $rk5,
+                    $rk6 =  $rk0 ^ ($s[ $rk5 >> 24 & 0xff] | ($s[ $rk5 & 0xff] << 8) | ($s[ $rk5 >> 8 & 0xff] << 16) | (($s[ $rk5 >> 16 & 0xff] ^ 0x01) << 24)),
+                    $rk7 =  $rk1 ^  $rk6,
+                    $rk8 =  $rk2 ^  $rk7,
+                    $rk9 =  $rk3 ^  $rk8,
+                    $rk10 =  $rk4 ^  $rk9,
+                    $rk11 =  $rk5 ^ $rk10,
+                    $rk12 =  $rk6 ^ ($s[$rk11 >> 24 & 0xff] | ($s[$rk11 & 0xff] << 8) | ($s[$rk11 >> 8 & 0xff] << 16) | (($s[$rk11 >> 16 & 0xff] ^ 0x02) << 24)),
+                    $rk13 =  $rk7 ^ $rk12,
+                    $rk14 =  $rk8 ^ $rk13,
+                    $rk15 =  $rk9 ^ $rk14,
+                    $rk16 = $rk10 ^ $rk15,
+                    $rk17 = $rk11 ^ $rk16,
+                    $rk18 = $rk12 ^ ($s[$rk17 >> 24 & 0xff] | ($s[$rk17 & 0xff] << 8) | ($s[$rk17 >> 8 & 0xff] << 16) | (($s[$rk17 >> 16 & 0xff] ^ 0x04) << 24)),
+                    $rk19 = $rk13 ^ $rk18,
+                    $rk20 = $rk14 ^ $rk19,
+                    $rk21 = $rk15 ^ $rk20,
+                    $rk22 = $rk16 ^ $rk21,
+                    $rk23 = $rk17 ^ $rk22,
+                    $rk24 = $rk18 ^ ($s[$rk23 >> 24 & 0xff] | ($s[$rk23 & 0xff] << 8) | ($s[$rk23 >> 8 & 0xff] << 16) | (($s[$rk23 >> 16 & 0xff] ^ 0x08) << 24)),
+                    $rk25 = $rk19 ^ $rk24,
+                    $rk26 = $rk20 ^ $rk25,
+                    $rk27 = $rk21 ^ $rk26,
+                    $rk28 = $rk22 ^ $rk27,
+                    $rk29 = $rk23 ^ $rk28,
+                    $rk30 = $rk24 ^ ($s[$rk29 >> 24 & 0xff] | ($s[$rk29 & 0xff] << 8) | ($s[$rk29 >> 8 & 0xff] << 16) | (($s[$rk29 >> 16 & 0xff] ^ 0x10) << 24)),
+                    $rk31 = $rk25 ^ $rk30,
+                    $rk32 = $rk26 ^ $rk31,
+                    $rk33 = $rk27 ^ $rk32,
+                    $rk34 = $rk28 ^ $rk33,
+                    $rk35 = $rk29 ^ $rk34,
+                    $rk36 = $rk30 ^ ($s[$rk35 >> 24 & 0xff] | ($s[$rk35 & 0xff] << 8) | ($s[$rk35 >> 8 & 0xff] << 16) | (($s[$rk35 >> 16 & 0xff] ^ 0x20) << 24)),
+                    $rk37 = $rk31 ^ $rk36,
+                    $rk38 = $rk32 ^ $rk37,
+                    $rk39 = $rk33 ^ $rk38,
+                    $rk40 = $rk34 ^ $rk39,
+                    $rk41 = $rk35 ^ $rk40,
+                    $rk42 = $rk36 ^ ($s[$rk41 >> 24 & 0xff] | ($s[$rk41 & 0xff] << 8) | ($s[$rk41 >> 8 & 0xff] << 16) | (($s[$rk41 >> 16 & 0xff] ^ 0x40) << 24)),
+                    $rk43 = $rk37 ^ $rk42,
+                    $rk44 = $rk38 ^ $rk43,
+                    $rk45 = $rk39 ^ $rk44,
+                    $rk46 = $rk40 ^ $rk45,
+                    $rk47 = $rk41 ^ $rk46,
+                56 =>
+                    $rk48 = $rk42 ^ ($s[$rk47 >> 24 & 0xff] | ($s[$rk47 & 0xff] << 8) | ($s[$rk47 >> 8 & 0xff] << 16) | (($s[$rk47 >> 16 & 0xff] ^ 0x80) << 24)),
+                    $rk49 = $rk43 ^ $rk48,
+                    $rk50 = $rk44 ^ $rk49,
+                    $rk51 = $rk45 ^ $rk50
+                ];
+
+                $pair[1] = [
+                    $rk0,
+                    $rk1,
+                    $rk2,
+                    $rk3,
+                    $t0[$s[ $rk4 >> 24 & 0xff]] ^ $t1[$s[ $rk4 >> 16 & 0xff]] ^ $t2[$s[ $rk4 >> 8 & 0xff]] ^ $t3[$s[ $rk4 & 0xff]],
+                    $t0[$s[ $rk5 >> 24 & 0xff]] ^ $t1[$s[ $rk5 >> 16 & 0xff]] ^ $t2[$s [$rk5 >> 8 & 0xff]] ^ $t3[$s[ $rk5 & 0xff]],
+                    $t0[$s[ $rk6 >> 24 & 0xff]] ^ $t1[$s[ $rk6 >> 16 & 0xff]] ^ $t2[$s[ $rk6 >> 8 & 0xff]] ^ $t3[$s[ $rk6 & 0xff]],
+                    $t0[$s[ $rk7 >> 24 & 0xff]] ^ $t1[$s[ $rk7 >> 16 & 0xff]] ^ $t2[$s[ $rk7 >> 8 & 0xff]] ^ $t3[$s[ $rk7 & 0xff]],
+                    $t0[$s[ $rk8 >> 24 & 0xff]] ^ $t1[$s[ $rk8 >> 16 & 0xff]] ^ $t2[$s[ $rk8 >> 8 & 0xff]] ^ $t3[$s[ $rk8 & 0xff]],
+                    $t0[$s[ $rk9 >> 24 & 0xff]] ^ $t1[$s[ $rk9 >> 16 & 0xff]] ^ $t2[$s[ $rk9 >> 8 & 0xff]] ^ $t3[$s[ $rk9 & 0xff]],
+                    $t0[$s[$rk10 >> 24 & 0xff]] ^ $t1[$s[$rk10 >> 16 & 0xff]] ^ $t2[$s[$rk10 >> 8 & 0xff]] ^ $t3[$s[$rk10 & 0xff]],
+                    $t0[$s[$rk11 >> 24 & 0xff]] ^ $t1[$s[$rk11 >> 16 & 0xff]] ^ $t2[$s[$rk11 >> 8 & 0xff]] ^ $t3[$s[$rk11 & 0xff]],
+                    $t0[$s[$rk12 >> 24 & 0xff]] ^ $t1[$s[$rk12 >> 16 & 0xff]] ^ $t2[$s[$rk12 >> 8 & 0xff]] ^ $t3[$s[$rk12 & 0xff]],
+                    $t0[$s[$rk13 >> 24 & 0xff]] ^ $t1[$s[$rk13 >> 16 & 0xff]] ^ $t2[$s[$rk13 >> 8 & 0xff]] ^ $t3[$s[$rk13 & 0xff]],
+                    $t0[$s[$rk14 >> 24 & 0xff]] ^ $t1[$s[$rk14 >> 16 & 0xff]] ^ $t2[$s[$rk14 >> 8 & 0xff]] ^ $t3[$s[$rk14 & 0xff]],
+                    $t0[$s[$rk15 >> 24 & 0xff]] ^ $t1[$s[$rk15 >> 16 & 0xff]] ^ $t2[$s[$rk15 >> 8 & 0xff]] ^ $t3[$s[$rk15 & 0xff]],
+                    $t0[$s[$rk16 >> 24 & 0xff]] ^ $t1[$s[$rk16 >> 16 & 0xff]] ^ $t2[$s[$rk16 >> 8 & 0xff]] ^ $t3[$s[$rk16 & 0xff]],
+                    $t0[$s[$rk17 >> 24 & 0xff]] ^ $t1[$s[$rk17 >> 16 & 0xff]] ^ $t2[$s[$rk17 >> 8 & 0xff]] ^ $t3[$s[$rk17 & 0xff]],
+                    $t0[$s[$rk18 >> 24 & 0xff]] ^ $t1[$s[$rk18 >> 16 & 0xff]] ^ $t2[$s[$rk18 >> 8 & 0xff]] ^ $t3[$s[$rk18 & 0xff]],
+                    $t0[$s[$rk19 >> 24 & 0xff]] ^ $t1[$s[$rk19 >> 16 & 0xff]] ^ $t2[$s[$rk19 >> 8 & 0xff]] ^ $t3[$s[$rk19 & 0xff]],
+                    $t0[$s[$rk20 >> 24 & 0xff]] ^ $t1[$s[$rk20 >> 16 & 0xff]] ^ $t2[$s[$rk20 >> 8 & 0xff]] ^ $t3[$s[$rk20 & 0xff]],
+                    $t0[$s[$rk21 >> 24 & 0xff]] ^ $t1[$s[$rk21 >> 16 & 0xff]] ^ $t2[$s[$rk21 >> 8 & 0xff]] ^ $t3[$s[$rk21 & 0xff]],
+                    $t0[$s[$rk22 >> 24 & 0xff]] ^ $t1[$s[$rk22 >> 16 & 0xff]] ^ $t2[$s[$rk22 >> 8 & 0xff]] ^ $t3[$s[$rk22 & 0xff]],
+                    $t0[$s[$rk23 >> 24 & 0xff]] ^ $t1[$s[$rk23 >> 16 & 0xff]] ^ $t2[$s[$rk23 >> 8 & 0xff]] ^ $t3[$s[$rk23 & 0xff]],
+                    $t0[$s[$rk24 >> 24 & 0xff]] ^ $t1[$s[$rk24 >> 16 & 0xff]] ^ $t2[$s[$rk24 >> 8 & 0xff]] ^ $t3[$s[$rk24 & 0xff]],
+                    $t0[$s[$rk25 >> 24 & 0xff]] ^ $t1[$s[$rk25 >> 16 & 0xff]] ^ $t2[$s[$rk25 >> 8 & 0xff]] ^ $t3[$s[$rk25 & 0xff]],
+                    $t0[$s[$rk26 >> 24 & 0xff]] ^ $t1[$s[$rk26 >> 16 & 0xff]] ^ $t2[$s[$rk26 >> 8 & 0xff]] ^ $t3[$s[$rk26 & 0xff]],
+                    $t0[$s[$rk27 >> 24 & 0xff]] ^ $t1[$s[$rk27 >> 16 & 0xff]] ^ $t2[$s[$rk27 >> 8 & 0xff]] ^ $t3[$s[$rk27 & 0xff]],
+                    $t0[$s[$rk28 >> 24 & 0xff]] ^ $t1[$s[$rk28 >> 16 & 0xff]] ^ $t2[$s[$rk28 >> 8 & 0xff]] ^ $t3[$s[$rk28 & 0xff]],
+                    $t0[$s[$rk29 >> 24 & 0xff]] ^ $t1[$s[$rk29 >> 16 & 0xff]] ^ $t2[$s[$rk29 >> 8 & 0xff]] ^ $t3[$s[$rk29 & 0xff]],
+                    $t0[$s[$rk30 >> 24 & 0xff]] ^ $t1[$s[$rk30 >> 16 & 0xff]] ^ $t2[$s[$rk30 >> 8 & 0xff]] ^ $t3[$s[$rk30 & 0xff]],
+                    $t0[$s[$rk31 >> 24 & 0xff]] ^ $t1[$s[$rk31 >> 16 & 0xff]] ^ $t2[$s[$rk31 >> 8 & 0xff]] ^ $t3[$s[$rk31 & 0xff]],
+                    $t0[$s[$rk32 >> 24 & 0xff]] ^ $t1[$s[$rk32 >> 16 & 0xff]] ^ $t2[$s[$rk32 >> 8 & 0xff]] ^ $t3[$s[$rk32 & 0xff]],
+                    $t0[$s[$rk33 >> 24 & 0xff]] ^ $t1[$s[$rk33 >> 16 & 0xff]] ^ $t2[$s[$rk33 >> 8 & 0xff]] ^ $t3[$s[$rk33 & 0xff]],
+                    $t0[$s[$rk34 >> 24 & 0xff]] ^ $t1[$s[$rk34 >> 16 & 0xff]] ^ $t2[$s[$rk34 >> 8 & 0xff]] ^ $t3[$s[$rk34 & 0xff]],
+                    $t0[$s[$rk35 >> 24 & 0xff]] ^ $t1[$s[$rk35 >> 16 & 0xff]] ^ $t2[$s[$rk35 >> 8 & 0xff]] ^ $t3[$s[$rk35 & 0xff]],
+                    $t0[$s[$rk36 >> 24 & 0xff]] ^ $t1[$s[$rk36 >> 16 & 0xff]] ^ $t2[$s[$rk36 >> 8 & 0xff]] ^ $t3[$s[$rk36 & 0xff]],
+                    $t0[$s[$rk37 >> 24 & 0xff]] ^ $t1[$s[$rk37 >> 16 & 0xff]] ^ $t2[$s[$rk37 >> 8 & 0xff]] ^ $t3[$s[$rk37 & 0xff]],
+                    $t0[$s[$rk38 >> 24 & 0xff]] ^ $t1[$s[$rk38 >> 16 & 0xff]] ^ $t2[$s[$rk38 >> 8 & 0xff]] ^ $t3[$s[$rk38 & 0xff]],
+                    $t0[$s[$rk39 >> 24 & 0xff]] ^ $t1[$s[$rk39 >> 16 & 0xff]] ^ $t2[$s[$rk39 >> 8 & 0xff]] ^ $t3[$s[$rk39 & 0xff]],
+                    $t0[$s[$rk40 >> 24 & 0xff]] ^ $t1[$s[$rk40 >> 16 & 0xff]] ^ $t2[$s[$rk40 >> 8 & 0xff]] ^ $t3[$s[$rk40 & 0xff]],
+                    $t0[$s[$rk41 >> 24 & 0xff]] ^ $t1[$s[$rk41 >> 16 & 0xff]] ^ $t2[$s[$rk41 >> 8 & 0xff]] ^ $t3[$s[$rk41 & 0xff]],
+                    $t0[$s[$rk42 >> 24 & 0xff]] ^ $t1[$s[$rk42 >> 16 & 0xff]] ^ $t2[$s[$rk42 >> 8 & 0xff]] ^ $t3[$s[$rk42 & 0xff]],
+                    $t0[$s[$rk43 >> 24 & 0xff]] ^ $t1[$s[$rk43 >> 16 & 0xff]] ^ $t2[$s[$rk43 >> 8 & 0xff]] ^ $t3[$s[$rk43 & 0xff]],
+                    $t0[$s[$rk44 >> 24 & 0xff]] ^ $t1[$s[$rk44 >> 16 & 0xff]] ^ $t2[$s[$rk44 >> 8 & 0xff]] ^ $t3[$s[$rk44 & 0xff]],
+                    $t0[$s[$rk45 >> 24 & 0xff]] ^ $t1[$s[$rk45 >> 16 & 0xff]] ^ $t2[$s[$rk45 >> 8 & 0xff]] ^ $t3[$s[$rk45 & 0xff]],
+                    $t0[$s[$rk46 >> 24 & 0xff]] ^ $t1[$s[$rk46 >> 16 & 0xff]] ^ $t2[$s[$rk46 >> 8 & 0xff]] ^ $t3[$s[$rk46 & 0xff]],
+                    $t0[$s[$rk47 >> 24 & 0xff]] ^ $t1[$s[$rk47 >> 16 & 0xff]] ^ $t2[$s[$rk47 >> 8 & 0xff]] ^ $t3[$s[$rk47 & 0xff]],
+                56 =>
+                    $rk48,
+                    $rk49,
+                    $rk50,
+                    $rk51
+                ];
+
+                break;
+            case 32:
+                list(,$rk0, $rk1, $rk2, $rk3, $rk4, $rk5, $rk6, $rk7) = unpack('N8', $key);
+
+                $pair[0] = [
+                    $rk0,
+                    $rk1,
+                    $rk2,
+                    $rk3,
+                    $rk4,
+                    $rk5,
+                    $rk6,
+                    $rk7,
+                    $rk8 =  $rk0 ^  ($s[ $rk7 >> 24 & 0xff] | ($s[ $rk7 & 0xff] << 8) | ($s[ $rk7 >> 8 & 0xff] << 16) | (($s[ $rk7 >> 16 & 0xff] ^ 0x01) << 24)),
+                    $rk9 =  $rk1 ^  $rk8,
+                    $rk10 =  $rk2 ^  $rk9,
+                    $rk11 =  $rk3 ^ $rk10,
+                    $rk12 =  $rk4 ^ ($s[$rk11 & 0xff] | ($s[$rk11 >> 8 & 0xff] << 8) | ($s[$rk11 >> 16 & 0xff] << 16) | ($s[$rk11 >> 24 & 0xff] << 24)),
+                    $rk13 =  $rk5 ^ $rk12,
+                    $rk14 =  $rk6 ^ $rk13,
+                    $rk15 =  $rk7 ^ $rk14,
+                    $rk16 =  $rk8 ^ ($s[$rk15 >> 24 & 0xff] | ($s[$rk15 & 0xff] << 8) | ($s[$rk15 >> 8 & 0xff] << 16) | (($s[$rk15 >> 16 & 0xff] ^ 0x02) << 24)),
+                    $rk17 =  $rk9 ^ $rk16,
+                    $rk18 = $rk10 ^ $rk17,
+                    $rk19 = $rk11 ^ $rk18,
+                    $rk20 = $rk12 ^ ($s[$rk19 & 0xff] | ($s[$rk19 >> 8 & 0xff] << 8) | ($s[$rk19 >> 16 & 0xff] << 16) | ($s[$rk19 >> 24 & 0xff] << 24)),
+                    $rk21 = $rk13 ^ $rk20,
+                    $rk22 = $rk14 ^ $rk21,
+                    $rk23 = $rk15 ^ $rk22,
+                    $rk24 = $rk16 ^ ($s[$rk23 >> 24 & 0xff] | ($s[$rk23 & 0xff] << 8) | ($s[$rk23 >> 8 & 0xff] << 16) | (($s[$rk23 >> 16 & 0xff] ^ 0x04) << 24)),
+                    $rk25 = $rk17 ^ $rk24,
+                    $rk26 = $rk18 ^ $rk25,
+                    $rk27 = $rk19 ^ $rk26,
+                    $rk28 = $rk20 ^ ($s[$rk27 & 0xff] | ($s[$rk27 >> 8 & 0xff] << 8) | ($s[$rk27 >> 16 & 0xff] << 16) | ($s[$rk27 >> 24 & 0xff] << 24)),
+                    $rk29 = $rk21 ^ $rk28,
+                    $rk30 = $rk22 ^ $rk29,
+                    $rk31 = $rk23 ^ $rk30,
+                    $rk32 = $rk24 ^ ($s[$rk31 >> 24 & 0xff] | ($s[$rk31 & 0xff] << 8) | ($s[$rk31 >> 8 & 0xff] << 16) | (($s[$rk31 >> 16 & 0xff] ^ 0x08) << 24)),
+                    $rk33 = $rk25 ^ $rk32,
+                    $rk34 = $rk26 ^ $rk33,
+                    $rk35 = $rk27 ^ $rk34,
+                    $rk36 = $rk28 ^ ($s[$rk35 & 0xff] | ($s[$rk35 >> 8 & 0xff] << 8) | ($s[$rk35 >> 16 & 0xff] << 16) | ($s[$rk35 >> 24 & 0xff] << 24)),
+                    $rk37 = $rk29 ^ $rk36,
+                    $rk38 = $rk30 ^ $rk37,
+                    $rk39 = $rk31 ^ $rk38,
+                    $rk40 = $rk32 ^ ($s[$rk39 >> 24 & 0xff] | ($s[$rk39 & 0xff] << 8) | ($s[$rk39 >> 8 & 0xff] << 16) | (($s[$rk39 >> 16 & 0xff] ^ 0x10) << 24)),
+                    $rk41 = $rk33 ^ $rk40,
+                    $rk42 = $rk34 ^ $rk41,
+                    $rk43 = $rk35 ^ $rk42,
+                    $rk44 = $rk36 ^ ($s[$rk43 & 0xff] | ($s[$rk43 >> 8 & 0xff] << 8) | ($s[$rk43 >> 16 & 0xff] << 16) | ($s[$rk43 >> 24 & 0xff] << 24)),
+                    $rk45 = $rk37 ^ $rk44,
+                    $rk46 = $rk38 ^ $rk45,
+                    $rk47 = $rk39 ^ $rk46,
+                    $rk48 = $rk40 ^ ($s[$rk47 >> 24 & 0xff] | ($s[$rk47 & 0xff] << 8) | ($s[$rk47 >> 8 & 0xff] << 16) | (($s[$rk47 >> 16 & 0xff] ^ 0x20) << 24)),
+                    $rk49 = $rk41 ^ $rk48,
+                    $rk50 = $rk42 ^ $rk49,
+                    $rk51 = $rk43 ^ $rk50,
+                    $rk52 = $rk44 ^ ($s[$rk51 & 0xff] | ($s[$rk51 >> 8 & 0xff] << 8) | ($s[$rk51 >> 16 & 0xff] << 16) | ($s[$rk51 >> 24 & 0xff] << 24)),
+                    $rk53 = $rk45 ^ $rk52,
+                    $rk54 = $rk46 ^ $rk53,
+                    $rk55 = $rk47 ^ $rk54,
+                    $rk56 = $rk48 ^ ($s[$rk55 >> 24 & 0xff] | ($s[$rk55 & 0xff] << 8) | ($s[$rk55 >> 8 & 0xff] << 16) | (($s[$rk55 >> 16 & 0xff] ^ 0x40) << 24)),
+                    $rk57 = $rk49 ^ $rk56,
+                    $rk58 = $rk50 ^ $rk57,
+                    $rk59 = $rk51 ^ $rk58
+                ];
+
+                $pair[1] = [
+                    $rk0,
+                    $rk1,
+                    $rk2,
+                    $rk3,
+                    $t0[$s[ $rk4 >> 24 & 0xff]] ^ $t1[$s[ $rk4 >> 16 & 0xff]] ^ $t2[$s[ $rk4 >> 8 & 0xff]] ^ $t3[$s[ $rk4 & 0xff]],
+                    $t0[$s[ $rk5 >> 24 & 0xff]] ^ $t1[$s[ $rk5 >> 16 & 0xff]] ^ $t2[$s[ $rk5 >> 8 & 0xff]] ^ $t3[$s[ $rk5 & 0xff]],
+                    $t0[$s[ $rk6 >> 24 & 0xff]] ^ $t1[$s[ $rk6 >> 16 & 0xff]] ^ $t2[$s[ $rk6 >> 8 & 0xff]] ^ $t3[$s[ $rk6 & 0xff]],
+                    $t0[$s[ $rk7 >> 24 & 0xff]] ^ $t1[$s[ $rk7 >> 16 & 0xff]] ^ $t2[$s[ $rk7 >> 8 & 0xff]] ^ $t3[$s[ $rk7 & 0xff]],
+                    $t0[$s[ $rk8 >> 24 & 0xff]] ^ $t1[$s[ $rk8 >> 16 & 0xff]] ^ $t2[$s[ $rk8 >> 8 & 0xff]] ^ $t3[$s[ $rk8 & 0xff]],
+                    $t0[$s[ $rk9 >> 24 & 0xff]] ^ $t1[$s[ $rk9 >> 16 & 0xff]] ^ $t2[$s[ $rk9 >> 8 & 0xff]] ^ $t3[$s[ $rk9 & 0xff]],
+                    $t0[$s[$rk10 >> 24 & 0xff]] ^ $t1[$s[$rk10 >> 16 & 0xff]] ^ $t2[$s[$rk10 >> 8 & 0xff]] ^ $t3[$s[$rk10 & 0xff]],
+                    $t0[$s[$rk11 >> 24 & 0xff]] ^ $t1[$s[$rk11 >> 16 & 0xff]] ^ $t2[$s[$rk11 >> 8 & 0xff]] ^ $t3[$s[$rk11 & 0xff]],
+                    $t0[$s[$rk12 >> 24 & 0xff]] ^ $t1[$s[$rk12 >> 16 & 0xff]] ^ $t2[$s[$rk12 >> 8 & 0xff]] ^ $t3[$s[$rk12 & 0xff]],
+                    $t0[$s[$rk13 >> 24 & 0xff]] ^ $t1[$s[$rk13 >> 16 & 0xff]] ^ $t2[$s[$rk13 >> 8 & 0xff]] ^ $t3[$s[$rk13 & 0xff]],
+                    $t0[$s[$rk14 >> 24 & 0xff]] ^ $t1[$s[$rk14 >> 16 & 0xff]] ^ $t2[$s[$rk14 >> 8 & 0xff]] ^ $t3[$s[$rk14 & 0xff]],
+                    $t0[$s[$rk15 >> 24 & 0xff]] ^ $t1[$s[$rk15 >> 16 & 0xff]] ^ $t2[$s[$rk15 >> 8 & 0xff]] ^ $t3[$s[$rk15 & 0xff]],
+                    $t0[$s[$rk16 >> 24 & 0xff]] ^ $t1[$s[$rk16 >> 16 & 0xff]] ^ $t2[$s[$rk16 >> 8 & 0xff]] ^ $t3[$s[$rk16 & 0xff]],
+                    $t0[$s[$rk17 >> 24 & 0xff]] ^ $t1[$s[$rk17 >> 16 & 0xff]] ^ $t2[$s[$rk17 >> 8 & 0xff]] ^ $t3[$s[$rk17 & 0xff]],
+                    $t0[$s[$rk18 >> 24 & 0xff]] ^ $t1[$s[$rk18 >> 16 & 0xff]] ^ $t2[$s[$rk18 >> 8 & 0xff]] ^ $t3[$s[$rk18 & 0xff]],
+                    $t0[$s[$rk19 >> 24 & 0xff]] ^ $t1[$s[$rk19 >> 16 & 0xff]] ^ $t2[$s[$rk19 >> 8 & 0xff]] ^ $t3[$s[$rk19 & 0xff]],
+                    $t0[$s[$rk20 >> 24 & 0xff]] ^ $t1[$s[$rk20 >> 16 & 0xff]] ^ $t2[$s[$rk20 >> 8 & 0xff]] ^ $t3[$s[$rk20 & 0xff]],
+                    $t0[$s[$rk21 >> 24 & 0xff]] ^ $t1[$s[$rk21 >> 16 & 0xff]] ^ $t2[$s[$rk21 >> 8 & 0xff]] ^ $t3[$s[$rk21 & 0xff]],
+                    $t0[$s[$rk22 >> 24 & 0xff]] ^ $t1[$s[$rk22 >> 16 & 0xff]] ^ $t2[$s[$rk22 >> 8 & 0xff]] ^ $t3[$s[$rk22 & 0xff]],
+                    $t0[$s[$rk23 >> 24 & 0xff]] ^ $t1[$s[$rk23 >> 16 & 0xff]] ^ $t2[$s[$rk23 >> 8 & 0xff]] ^ $t3[$s[$rk23 & 0xff]],
+                    $t0[$s[$rk24 >> 24 & 0xff]] ^ $t1[$s[$rk24 >> 16 & 0xff]] ^ $t2[$s[$rk24 >> 8 & 0xff]] ^ $t3[$s[$rk24 & 0xff]],
+                    $t0[$s[$rk25 >> 24 & 0xff]] ^ $t1[$s[$rk25 >> 16 & 0xff]] ^ $t2[$s[$rk25 >> 8 & 0xff]] ^ $t3[$s[$rk25 & 0xff]],
+                    $t0[$s[$rk26 >> 24 & 0xff]] ^ $t1[$s[$rk26 >> 16 & 0xff]] ^ $t2[$s[$rk26 >> 8 & 0xff]] ^ $t3[$s[$rk26 & 0xff]],
+                    $t0[$s[$rk27 >> 24 & 0xff]] ^ $t1[$s[$rk27 >> 16 & 0xff]] ^ $t2[$s[$rk27 >> 8 & 0xff]] ^ $t3[$s[$rk27 & 0xff]],
+                    $t0[$s[$rk28 >> 24 & 0xff]] ^ $t1[$s[$rk28 >> 16 & 0xff]] ^ $t2[$s[$rk28 >> 8 & 0xff]] ^ $t3[$s[$rk28 & 0xff]],
+                    $t0[$s[$rk29 >> 24 & 0xff]] ^ $t1[$s[$rk29 >> 16 & 0xff]] ^ $t2[$s[$rk29 >> 8 & 0xff]] ^ $t3[$s[$rk29 & 0xff]],
+                    $t0[$s[$rk30 >> 24 & 0xff]] ^ $t1[$s[$rk30 >> 16 & 0xff]] ^ $t2[$s[$rk30 >> 8 & 0xff]] ^ $t3[$s[$rk30 & 0xff]],
+                    $t0[$s[$rk31 >> 24 & 0xff]] ^ $t1[$s[$rk31 >> 16 & 0xff]] ^ $t2[$s[$rk31 >> 8 & 0xff]] ^ $t3[$s[$rk31 & 0xff]],
+                    $t0[$s[$rk32 >> 24 & 0xff]] ^ $t1[$s[$rk32 >> 16 & 0xff]] ^ $t2[$s[$rk32 >> 8 & 0xff]] ^ $t3[$s[$rk32 & 0xff]],
+                    $t0[$s[$rk33 >> 24 & 0xff]] ^ $t1[$s[$rk33 >> 16 & 0xff]] ^ $t2[$s[$rk33 >> 8 & 0xff]] ^ $t3[$s[$rk33 & 0xff]],
+                    $t0[$s[$rk34 >> 24 & 0xff]] ^ $t1[$s[$rk34 >> 16 & 0xff]] ^ $t2[$s[$rk34 >> 8 & 0xff]] ^ $t3[$s[$rk34 & 0xff]],
+                    $t0[$s[$rk35 >> 24 & 0xff]] ^ $t1[$s[$rk35 >> 16 & 0xff]] ^ $t2[$s[$rk35 >> 8 & 0xff]] ^ $t3[$s[$rk35 & 0xff]],
+                    $t0[$s[$rk36 >> 24 & 0xff]] ^ $t1[$s[$rk36 >> 16 & 0xff]] ^ $t2[$s[$rk36 >> 8 & 0xff]] ^ $t3[$s[$rk36 & 0xff]],
+                    $t0[$s[$rk37 >> 24 & 0xff]] ^ $t1[$s[$rk37 >> 16 & 0xff]] ^ $t2[$s[$rk37 >> 8 & 0xff]] ^ $t3[$s[$rk37 & 0xff]],
+                    $t0[$s[$rk38 >> 24 & 0xff]] ^ $t1[$s[$rk38 >> 16 & 0xff]] ^ $t2[$s[$rk38 >> 8 & 0xff]] ^ $t3[$s[$rk38 & 0xff]],
+                    $t0[$s[$rk39 >> 24 & 0xff]] ^ $t1[$s[$rk39 >> 16 & 0xff]] ^ $t2[$s[$rk39 >> 8 & 0xff]] ^ $t3[$s[$rk39 & 0xff]],
+                    $t0[$s[$rk40 >> 24 & 0xff]] ^ $t1[$s[$rk40 >> 16 & 0xff]] ^ $t2[$s[$rk40 >> 8 & 0xff]] ^ $t3[$s[$rk40 & 0xff]],
+                    $t0[$s[$rk41 >> 24 & 0xff]] ^ $t1[$s[$rk41 >> 16 & 0xff]] ^ $t2[$s[$rk41 >> 8 & 0xff]] ^ $t3[$s[$rk41 & 0xff]],
+                    $t0[$s[$rk42 >> 24 & 0xff]] ^ $t1[$s[$rk42 >> 16 & 0xff]] ^ $t2[$s[$rk42 >> 8 & 0xff]] ^ $t3[$s[$rk42 & 0xff]],
+                    $t0[$s[$rk43 >> 24 & 0xff]] ^ $t1[$s[$rk43 >> 16 & 0xff]] ^ $t2[$s[$rk43 >> 8 & 0xff]] ^ $t3[$s[$rk43 & 0xff]],
+                    $t0[$s[$rk44 >> 24 & 0xff]] ^ $t1[$s[$rk44 >> 16 & 0xff]] ^ $t2[$s[$rk44 >> 8 & 0xff]] ^ $t3[$s[$rk44 & 0xff]],
+                    $t0[$s[$rk45 >> 24 & 0xff]] ^ $t1[$s[$rk45 >> 16 & 0xff]] ^ $t2[$s[$rk45 >> 8 & 0xff]] ^ $t3[$s[$rk45 & 0xff]],
+                    $t0[$s[$rk46 >> 24 & 0xff]] ^ $t1[$s[$rk46 >> 16 & 0xff]] ^ $t2[$s[$rk46 >> 8 & 0xff]] ^ $t3[$s[$rk46 & 0xff]],
+                    $t0[$s[$rk47 >> 24 & 0xff]] ^ $t1[$s[$rk47 >> 16 & 0xff]] ^ $t2[$s[$rk47 >> 8 & 0xff]] ^ $t3[$s[$rk47 & 0xff]],
+                    $t0[$s[$rk48 >> 24 & 0xff]] ^ $t1[$s[$rk48 >> 16 & 0xff]] ^ $t2[$s[$rk48 >> 8 & 0xff]] ^ $t3[$s[$rk48 & 0xff]],
+                    $t0[$s[$rk49 >> 24 & 0xff]] ^ $t1[$s[$rk49 >> 16 & 0xff]] ^ $t2[$s[$rk49 >> 8 & 0xff]] ^ $t3[$s[$rk49 & 0xff]],
+                    $t0[$s[$rk50 >> 24 & 0xff]] ^ $t1[$s[$rk50 >> 16 & 0xff]] ^ $t2[$s[$rk50 >> 8 & 0xff]] ^ $t3[$s[$rk50 & 0xff]],
+                    $t0[$s[$rk51 >> 24 & 0xff]] ^ $t1[$s[$rk51 >> 16 & 0xff]] ^ $t2[$s[$rk51 >> 8 & 0xff]] ^ $t3[$s[$rk51 & 0xff]],
+                    $t0[$s[$rk52 >> 24 & 0xff]] ^ $t1[$s[$rk52 >> 16 & 0xff]] ^ $t2[$s[$rk52 >> 8 & 0xff]] ^ $t3[$s[$rk52 & 0xff]],
+                    $t0[$s[$rk53 >> 24 & 0xff]] ^ $t1[$s[$rk53 >> 16 & 0xff]] ^ $t2[$s[$rk53 >> 8 & 0xff]] ^ $t3[$s[$rk53 & 0xff]],
+                    $t0[$s[$rk54 >> 24 & 0xff]] ^ $t1[$s[$rk54 >> 16 & 0xff]] ^ $t2[$s[$rk54 >> 8 & 0xff]] ^ $t3[$s[$rk54 & 0xff]],
+                    $t0[$s[$rk55 >> 24 & 0xff]] ^ $t1[$s[$rk55 >> 16 & 0xff]] ^ $t2[$s[$rk55 >> 8 & 0xff]] ^ $t3[$s[$rk55 & 0xff]],
+                    $rk56,
+                    $rk57,
+                    $rk58,
+                    $rk59
+                ];
+
+                break;
+            default:
+                throw new \LengthException('Invalid key length.');
         }
 
-        $y0 = $t0[$x0 >> 24 & 0xff] ^ $t1[$x1 >> 16 & 0xff] ^ $t2[$x2 >> 8 & 0xff] ^ $t3[$x3 & 0xff] ^ $rk[$i++];
-        $y1 = $t0[$x1 >> 24 & 0xff] ^ $t1[$x2 >> 16 & 0xff] ^ $t2[$x3 >> 8 & 0xff] ^ $t3[$x0 & 0xff] ^ $rk[$i++];
-        $y2 = $t0[$x2 >> 24 & 0xff] ^ $t1[$x3 >> 16 & 0xff] ^ $t2[$x0 >> 8 & 0xff] ^ $t3[$x1 & 0xff] ^ $rk[$i++];
-        $y3 = $t0[$x3 >> 24 & 0xff] ^ $t1[$x0 >> 16 & 0xff] ^ $t2[$x1 >> 8 & 0xff] ^ $t3[$x2 & 0xff] ^ $rk[$i++];
-
-        return pack('N4',
-            (($s[$y0 >> 24 & 0xff] << 24) ^ ($s[$y1 >> 16 & 0xff] << 16) ^ ($s[$y2 >> 8 & 0xff] << 8) ^ $s[$y3 & 0xff]) ^ $rk[$i++],
-            (($s[$y1 >> 24 & 0xff] << 24) ^ ($s[$y2 >> 16 & 0xff] << 16) ^ ($s[$y3 >> 8 & 0xff] << 8) ^ $s[$y0 & 0xff]) ^ $rk[$i++],
-            (($s[$y2 >> 24 & 0xff] << 24) ^ ($s[$y3 >> 16 & 0xff] << 16) ^ ($s[$y0 >> 8 & 0xff] << 8) ^ $s[$y1 & 0xff]) ^ $rk[$i++],
-            (($s[$y3 >> 24 & 0xff] << 24) ^ ($s[$y0 >> 16 & 0xff] << 16) ^ ($s[$y1 >> 8 & 0xff] << 8) ^ $s[$y2 & 0xff]) ^ $rk[$i]
-        );
-    }
-
-    function decryptBlock(Context $ctx, $block)
-    {
-        $t0 = $this->T0i;
-        $t1 = $this->T1i;
-        $t2 = $this->T2i;
-        $t3 = $this->T3i;
-        $s = $this->Si;
-        $rk  = $ctx->RKi;
-        $i = $this->dStart;
-
-        list(,$x0, $x1, $x2, $x3) = unpack('N4', $block);
-
-        $x3 ^= $rk[$i--];
-        $x2 ^= $rk[$i--];
-        $x1 ^= $rk[$i--];
-        $x0 ^= $rk[$i--];
-
-        while ($i > 7) {
-            $y3 = $t0[$x3 >> 24 & 0xff] ^ $t1[$x2 >> 16 & 0xff] ^ $t2[$x1 >> 8 & 0xff] ^ $t3[$x0 & 0xff] ^ $rk[$i--];
-            $y2 = $t0[$x2 >> 24 & 0xff] ^ $t1[$x1 >> 16 & 0xff] ^ $t2[$x0 >> 8 & 0xff] ^ $t3[$x3 & 0xff] ^ $rk[$i--];
-            $y1 = $t0[$x1 >> 24 & 0xff] ^ $t1[$x0 >> 16 & 0xff] ^ $t2[$x3 >> 8 & 0xff] ^ $t3[$x2 & 0xff] ^ $rk[$i--];
-            $y0 = $t0[$x0 >> 24 & 0xff] ^ $t1[$x3 >> 16 & 0xff] ^ $t2[$x2 >> 8 & 0xff] ^ $t3[$x1 & 0xff] ^ $rk[$i--];
-
-            $x3 = $t0[$y3 >> 24 & 0xff] ^ $t1[$y2 >> 16 & 0xff] ^ $t2[$y1 >> 8 & 0xff] ^ $t3[$y0 & 0xff] ^ $rk[$i--];
-            $x2 = $t0[$y2 >> 24 & 0xff] ^ $t1[$y1 >> 16 & 0xff] ^ $t2[$y0 >> 8 & 0xff] ^ $t3[$y3 & 0xff] ^ $rk[$i--];
-            $x1 = $t0[$y1 >> 24 & 0xff] ^ $t1[$y0 >> 16 & 0xff] ^ $t2[$y3 >> 8 & 0xff] ^ $t3[$y2 & 0xff] ^ $rk[$i--];
-            $x0 = $t0[$y0 >> 24 & 0xff] ^ $t1[$y3 >> 16 & 0xff] ^ $t2[$y2 >> 8 & 0xff] ^ $t3[$y1 & 0xff] ^ $rk[$i--];
-        }
-
-        $y0 = $t0[$x0 >> 24 & 0xff] ^ $t1[$x3 >> 16 & 0xff] ^ $t2[$x2 >> 8 & 0xff] ^ $t3[$x1 & 0xff] ^ $rk[4];
-        $y1 = $t0[$x1 >> 24 & 0xff] ^ $t1[$x0 >> 16 & 0xff] ^ $t2[$x3 >> 8 & 0xff] ^ $t3[$x2 & 0xff] ^ $rk[5];
-        $y2 = $t0[$x2 >> 24 & 0xff] ^ $t1[$x1 >> 16 & 0xff] ^ $t2[$x0 >> 8 & 0xff] ^ $t3[$x3 & 0xff] ^ $rk[6];
-        $y3 = $t0[$x3 >> 24 & 0xff] ^ $t1[$x2 >> 16 & 0xff] ^ $t2[$x1 >> 8 & 0xff] ^ $t3[$x0 & 0xff] ^ $rk[7];
-
-        return pack('N4',
-            (($s[$y0 >> 24 & 0xff] << 24) | ($s[$y3 >> 16 & 0xff] << 16)| ($s[$y2 >> 8 & 0xff] << 8) | $s[$y1 & 0xff]) ^ $rk[0],
-            (($s[$y1 >> 24 & 0xff] << 24) | ($s[$y0 >> 16 & 0xff] << 16)| ($s[$y3 >> 8 & 0xff] << 8) | $s[$y2 & 0xff]) ^ $rk[1],
-            (($s[$y2 >> 24 & 0xff] << 24) | ($s[$y1 >> 16 & 0xff] << 16)| ($s[$y0 >> 8 & 0xff] << 8) | $s[$y3 & 0xff]) ^ $rk[2],
-            (($s[$y3 >> 24 & 0xff] << 24) | ($s[$y2 >> 16 & 0xff] << 16)| ($s[$y1 >> 8 & 0xff] << 8) | $s[$y0 & 0xff]) ^ $rk[3]
-        );
+        return $pair;
     }
 }
