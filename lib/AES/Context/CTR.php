@@ -16,6 +16,6 @@ class CTR
     function __construct($key, $nonce)
     {
         list($this->RK, $this->RKi, $this->keyLen) = Cipher::generateKey($key);
-        $this->nonce = $nonce;
+        $this->nonce = array_values(unpack('N4', $nonce));
     }
 }

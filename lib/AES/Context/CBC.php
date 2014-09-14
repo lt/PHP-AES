@@ -15,6 +15,6 @@ class CBC
     function __construct($key, $iv)
     {
         list($this->RK, $this->RKi, $this->keyLen) = Cipher::generateKey($key);
-        $this->IV = $iv;
+        $this->IV = array_values(unpack('N4', $iv));
     }
 } 
