@@ -39,14 +39,14 @@ Separate contexts are required for encryption and decryption, as different keys 
 // Instantiate a context
 $ctx = new AES\Context\CTR($key, $nonce);
 
-// Instantiate a block cipher
+// Instantiate a cipher mode
 $ctr = new AES\Mode\CTR();
 
 // Encrypt / decrypt a message
-$ctr->encrypt($ctx, $messagePart1);
+$cipherText = $ctr->encrypt($ctx, $messagePart1);
 
 // Encrypt / decrypt more of a message
-$ctr->encrypt($ctx, $messagePart2);
+$cipherText .= $ctr->encrypt($ctx, $messagePart2);
 ```
 
 ### TODO:
