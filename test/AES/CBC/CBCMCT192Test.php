@@ -234,17 +234,16 @@ class CBCMCT192 extends \PHPUnit_Framework_TestCase
         $ctx = new Context(hex2bin($key), hex2bin($iv));
         $cbc = new CBC();
         $lastCiphertext = hex2bin($plaintext);
+
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
-        for ($i = 0; $i < 1000; $i++) {
-            if ($i) {
-                $thisCiphertext = $cbc->encrypt($ctx, $lastCiphertext);
-                $lastCiphertext = $nextPlaintext;
-                $nextPlaintext = $thisCiphertext;
-            }
-            else {
-                $nextPlaintext = $cbc->encrypt($ctx, $lastCiphertext);
-                $lastCiphertext = hex2bin($iv);
-            }
+
+        $nextPlaintext = $cbc->encrypt($ctx, $lastCiphertext);
+        $lastCiphertext = hex2bin($iv);
+
+        for ($i = 1; $i < 1000; $i++) {
+            $thisCiphertext = $cbc->encrypt($ctx, $lastCiphertext);
+            $lastCiphertext = $nextPlaintext;
+            $nextPlaintext = $thisCiphertext;
         }
 
         $this->assertSame(hex2bin($ciphertext), $nextPlaintext);
@@ -259,16 +258,13 @@ class CBCMCT192 extends \PHPUnit_Framework_TestCase
         $cbc = new CBC();
         $lastPlaintext = hex2bin($ciphertext);
 
-        for ($i = 0; $i < 1000; $i++) {
-            if ($i) {
-                $thisPlaintext = $cbc->decrypt($ctx, $lastPlaintext);
-                $lastPlaintext = $nextCiphertext;
-                $nextCiphertext = $thisPlaintext;
-            }
-            else {
-                $nextCiphertext = $cbc->decrypt($ctx, $lastPlaintext);
-                $lastPlaintext = hex2bin($iv);
-            }
+        $nextCiphertext = $cbc->decrypt($ctx, $lastPlaintext);
+        $lastPlaintext = hex2bin($iv);
+
+        for ($i = 1; $i < 1000; $i++) {
+            $thisPlaintext = $cbc->decrypt($ctx, $lastPlaintext);
+            $lastPlaintext = $nextCiphertext;
+            $nextCiphertext = $thisPlaintext;
         }
 
         $this->assertSame(hex2bin($plaintext), $nextCiphertext);
