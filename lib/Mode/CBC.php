@@ -105,10 +105,10 @@ class CBC
 
     function decrypt(Context $ctx, $message)
     {
-        $t0 = \AES\MIXCOLUMNS__INVERSE_0;
-        $t1 = \AES\MIXCOLUMNS__INVERSE_1;
-        $t2 = \AES\MIXCOLUMNS__INVERSE_2;
-        $t3 = \AES\MIXCOLUMNS__INVERSE_3;
+        $t0 = \AES\MIXCOLUMNS_INVERSE_0;
+        $t1 = \AES\MIXCOLUMNS_INVERSE_1;
+        $t2 = \AES\MIXCOLUMNS_INVERSE_2;
+        $t3 = \AES\MIXCOLUMNS_INVERSE_3;
         $s  = \AES\SUBBYTES_INVERSE;
         $rk = $ctx->RKi;
 

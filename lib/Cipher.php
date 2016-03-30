@@ -8,10 +8,10 @@ abstract class Cipher
 
     static function generateKey($key)
     {
-        $t0 = MIXCOLUMNS__INVERSE_0;
-        $t1 = MIXCOLUMNS__INVERSE_1;
-        $t2 = MIXCOLUMNS__INVERSE_2;
-        $t3 = MIXCOLUMNS__INVERSE_3;
+        $t0 = MIXCOLUMNS_INVERSE_0;
+        $t1 = MIXCOLUMNS_INVERSE_1;
+        $t2 = MIXCOLUMNS_INVERSE_2;
+        $t3 = MIXCOLUMNS_INVERSE_3;
         $s  = SUBBYTES;
 
         $keyLen = strlen($key);
