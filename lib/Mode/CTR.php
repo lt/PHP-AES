@@ -9,11 +9,11 @@ class CTR
 {
     function encrypt(Context $ctx, $message)
     {
-        $t0 = Cipher::$T0;
-        $t1 = Cipher::$T1;
-        $t2 = Cipher::$T2;
-        $t3 = Cipher::$T3;
-        $s  = Cipher::$S;
+        $t0 = \AES\MIXCOLUMNS_0;
+        $t1 = \AES\MIXCOLUMNS_1;
+        $t2 = \AES\MIXCOLUMNS_2;
+        $t3 = \AES\MIXCOLUMNS_3;
+        $s  = \AES\SUBBYTES;
         $rk = $ctx->RK;
 
         $messageLen = strlen($message);

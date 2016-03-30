@@ -9,11 +9,11 @@ class CBC
 {
     function encrypt(Context $ctx, $message)
     {
-        $t0 = Cipher::$T0;
-        $t1 = Cipher::$T1;
-        $t2 = Cipher::$T2;
-        $t3 = Cipher::$T3;
-        $s  = Cipher::$S;
+        $t0 = \AES\MIXCOLUMNS_0;
+        $t1 = \AES\MIXCOLUMNS_1;
+        $t2 = \AES\MIXCOLUMNS_2;
+        $t3 = \AES\MIXCOLUMNS_3;
+        $s  = \AES\SUBBYTES;
         $rk = $ctx->RK;
 
         $offset = 0;
@@ -105,11 +105,11 @@ class CBC
 
     function decrypt(Context $ctx, $message)
     {
-        $t0 = Cipher::$T0i;
-        $t1 = Cipher::$T1i;
-        $t2 = Cipher::$T2i;
-        $t3 = Cipher::$T3i;
-        $s  = Cipher::$Si;
+        $t0 = \AES\MIXCOLUMNS__INVERSE_0;
+        $t1 = \AES\MIXCOLUMNS__INVERSE_1;
+        $t2 = \AES\MIXCOLUMNS__INVERSE_2;
+        $t3 = \AES\MIXCOLUMNS__INVERSE_3;
+        $s  = \AES\SUBBYTES_INVERSE;
         $rk = $ctx->RKi;
 
         $offset = 0;
