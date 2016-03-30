@@ -6,12 +6,11 @@ use AES\Cipher;
 
 class ECB
 {
-    public $RK;
-    public $RKi;
+    public $key;
     public $keyLen;
 
     function __construct($key)
     {
-        list($this->RK, $this->RKi, $this->keyLen) = Cipher::generateKey($key);
+        $this->key = Cipher::generateKey($key);
     }
 } 
