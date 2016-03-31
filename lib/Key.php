@@ -29,17 +29,17 @@ class Key
         $this->bits = $bits;
     }
     
-    function bits()
+    function bits(): int
     {
         return $this->bits;
     }
     
-    function encryptionKey()
+    function encryptionKey(): array
     {
         return $this->encryptionKey;
     }
     
-    function decryptionKey()
+    function decryptionKey(): array
     {
         return $this->decryptionKey;
     }

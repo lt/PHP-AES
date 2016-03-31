@@ -1,8 +1,8 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace AES\Context;
 
-use AES\Cipher;
+use AES\Key;
 
 class CBC
 {
@@ -11,9 +11,9 @@ class CBC
 
     public $IV;
 
-    function __construct($key, $iv)
+    function __construct(string $key, string $iv)
     {
-        $this->key = Cipher::generateKey($key);
-        $this->IV = array_values(unpack('N4', $iv));
+        $this->key = new Key($key);
+        $this->IV = $iv;
     }
 } 
