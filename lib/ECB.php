@@ -1,34 +1,38 @@
 <?php declare(strict_types = 1);
 
-namespace AES\Mode;
-
-use AES\Cipher;
-use AES\Context\ECB as Context;
+namespace AES;
 
 class ECB extends Cipher
 {
-    function encrypt(Context $ctx, string $message): string
+    private $key;
+
+    function __construct(Key $key)
+    {
+        $this->key = $key;
+    }
+    
+    function encrypt(string $message): string
     {
         $offset = 0;
         $out = '';
         
         $blocks = strlen($message) >> 4;
         while ($blocks--) {
-            $out .= $this->encryptBlock($ctx->key, substr($message, $offset, 16));
+            $out .= $this->encryptBlock($this->key, substr($message, $offset, 16));
             $offset += 16;
         }
 
         return $out;
     }
 
-    function decrypt(Context $ctx, string $message): string
+    function decrypt(string $message): string
     {
         $offset = 0;
         $out = '';
 
         $blocks = strlen($message) >> 4;
         while ($blocks--) {
-            $out .= $this->decryptBlock($ctx->key, substr($message, $offset, 16));
+            $out .= $this->decryptBlock($this->key, substr($message, $offset, 16));
             $offset += 16;
         }
 
