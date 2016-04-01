@@ -9,8 +9,8 @@
 
 namespace AES\Test;
 
-use AES\Mode\CBC;
-use AES\Context\CBC as Context;
+use AES\CBC;
+use AES\Key;
 
 class CBCVarTxt128 extends \PHPUnit_Framework_TestCase
 {
@@ -153,9 +153,8 @@ class CBCVarTxt128 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $ctx = new Context(hex2bin($key), hex2bin($iv));
-        $cbc = new CBC();
-        $result = $cbc->encrypt($ctx, hex2bin($plaintext));
+        $cbc = new CBC(new Key(hex2bin($key)), hex2bin($iv));
+        $result = $cbc->encrypt(hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -164,9 +163,8 @@ class CBCVarTxt128 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $ctx = new Context(hex2bin($key), hex2bin($iv));
-        $cbc = new CBC();
-        $result = $cbc->decrypt($ctx, hex2bin($ciphertext));
+        $cbc = new CBC(new Key(hex2bin($key)), hex2bin($iv));
+        $result = $cbc->decrypt(hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

@@ -9,8 +9,8 @@
 
 namespace AES\Test;
 
-use AES\Mode\CBC;
-use AES\Context\CBC as Context;
+use AES\CBC;
+use AES\Key;
 
 class CBCMCT192 extends \PHPUnit_Framework_TestCase
 {
@@ -231,17 +231,16 @@ class CBCMCT192 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $ctx = new Context(hex2bin($key), hex2bin($iv));
-        $cbc = new CBC();
+        $cbc = new CBC(new Key(hex2bin($key)), hex2bin($iv));
         $lastCiphertext = hex2bin($plaintext);
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
 
-        $nextPlaintext = $cbc->encrypt($ctx, $lastCiphertext);
+        $nextPlaintext = $cbc->encrypt($lastCiphertext);
         $lastCiphertext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisCiphertext = $cbc->encrypt($ctx, $lastCiphertext);
+            $thisCiphertext = $cbc->encrypt($lastCiphertext);
             $lastCiphertext = $nextPlaintext;
             $nextPlaintext = $thisCiphertext;
         }
@@ -254,15 +253,14 @@ class CBCMCT192 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $iv, $ciphertext, $plaintext)
     {
-        $ctx = new Context(hex2bin($key), hex2bin($iv));
-        $cbc = new CBC();
+        $cbc = new CBC(new Key(hex2bin($key)), hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
-        $nextCiphertext = $cbc->decrypt($ctx, $lastPlaintext);
+        $nextCiphertext = $cbc->decrypt($lastPlaintext);
         $lastPlaintext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisPlaintext = $cbc->decrypt($ctx, $lastPlaintext);
+            $thisPlaintext = $cbc->decrypt($lastPlaintext);
             $lastPlaintext = $nextCiphertext;
             $nextCiphertext = $thisPlaintext;
         }

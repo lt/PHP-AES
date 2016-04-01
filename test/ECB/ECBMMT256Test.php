@@ -9,8 +9,8 @@
 
 namespace AES\Test;
 
-use AES\Mode\ECB;
-use AES\Context\ECB as Context;
+use AES\ECB;
+use AES\Key;
 
 class ECBMMT256 extends \PHPUnit_Framework_TestCase
 {
@@ -51,9 +51,8 @@ class ECBMMT256 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $plaintext, $ciphertext)
     {
-        $ctx = new Context(hex2bin($key));
-        $ecb = new ECB();
-        $result = $ecb->encrypt($ctx, hex2bin($plaintext));
+        $ecb = new ECB(new Key(hex2bin($key)));
+        $result = $ecb->encrypt(hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -62,9 +61,8 @@ class ECBMMT256 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $ciphertext, $plaintext)
     {
-        $ctx = new Context(hex2bin($key));
-        $ecb = new ECB();
-        $result = $ecb->decrypt($ctx, hex2bin($ciphertext));
+        $ecb = new ECB(new Key(hex2bin($key)));
+        $result = $ecb->decrypt(hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

@@ -9,8 +9,8 @@
 
 namespace AES\Test;
 
-use AES\Mode\ECB;
-use AES\Context\ECB as Context;
+use AES\ECB;
+use AES\Key;
 
 class ECBMCT128 extends \PHPUnit_Framework_TestCase
 {
@@ -231,11 +231,10 @@ class ECBMCT128 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $plaintext, $ciphertext)
     {
-        $ctx = new Context(hex2bin($key));
-        $ecb = new ECB();
+        $ecb = new ECB(new Key(hex2bin($key)));
         $result = hex2bin($plaintext);
         for ($i = 0; $i < 1000; $i++) {
-            $result = $ecb->encrypt($ctx, $result);
+            $result = $ecb->encrypt($result);
 
         }
         $this->assertSame(hex2bin($ciphertext), $result);
@@ -246,11 +245,10 @@ class ECBMCT128 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $ciphertext, $plaintext)
     {
-        $ctx = new Context(hex2bin($key));
-        $ecb = new ECB();
+        $ecb = new ECB(new Key(hex2bin($key)));
         $result = hex2bin($ciphertext);
         for ($i = 0; $i < 1000; $i++) {
-            $result = $ecb->decrypt($ctx, $result);
+            $result = $ecb->decrypt($result);
         }
         $this->assertSame(hex2bin($plaintext), $result);
     }
