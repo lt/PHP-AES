@@ -23,29 +23,36 @@ class CFB extends Cipher
         $keyStream = $this->buffer;
 
         // Since this is a stream mode the output doesn't have to be aligned to block boundaries.
-        // However we only get a new IV when a block (keyStream) has been completely consumed.
-        // It's possible that it may take several calls to consume the block, so the IV is built
-        // up as we go.
+        // However we only get a new IV when a block (i.e. keyStream) has been fully consumed.
+
+        // It's possible that it may take several calls (i.e. short messages) to consume the block,
+        // so the IV is built up as we go.
+
+        // The len(iv) + len(keyStream) should always be equal to 16
         $out = $message ^ $keyStream;
         $iv = $this->iv . $out;
 
+        // One becomes '', the other becomes the remainder of itself
         $outLen = strlen($out);
         $message = substr($message, $outLen);
         $keyStream = substr($keyStream, $outLen);
 
         $offset = 0;
 
+        // if the message was short and didn't consume the remaining
+        // keyStream then 0 bytes are required and the loop is skipped
         $bytesRequired = strlen($message);
         $bytesOver = $bytesRequired % 16;
 
         $blocks = ($bytesRequired >> 4) + ($bytesOver > 0);
         while ($blocks--) {
             $keyStream = $this->encryptBlock($this->key, $iv);
+            // len(iv) can be less than 16 on the last block
             $out .= $iv = $keyStream ^ substr($message, $offset, 16);
             $offset += 16;
         }
 
-        $this->buffer = substr($keyStream, $bytesRequired);
+        $this->buffer = $bytesOver ? substr($keyStream, $bytesOver) : '';
         $this->iv = $iv;
 
         return $out;
@@ -55,9 +62,11 @@ class CFB extends Cipher
     {
         $keyStream = $this->buffer;
 
+        // Similar to encrypt, we only get a new iv for each block-aligned
+        // piece of ciphertext, so we need to build it as we go in case of
+        // many calls with small messages
         $out = $message ^ $keyStream;
-        $iv = $this->iv;
-        $iv .= substr($message, 0, 16 - strlen($iv));
+        $iv = $this->iv . substr($message, 0, strlen($out));
 
         $outLen = strlen($out);
         $message = substr($message, $outLen);
@@ -75,7 +84,7 @@ class CFB extends Cipher
             $offset += 16;
         }
 
-        $this->buffer = substr($keyStream, $bytesRequired);
+        $this->buffer = $bytesOver ? substr($keyStream, $bytesOver) : '';
         $this->iv = $iv;
 
         return $out;
