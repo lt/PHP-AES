@@ -6,7 +6,7 @@ class CTR extends Cipher
 {
     private $key;
     private $nonce;
-    private $buffer;
+    private $buffer = '';
 
     function __construct(Key $key, string $nonce)
     {
