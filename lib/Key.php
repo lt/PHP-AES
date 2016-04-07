@@ -2,6 +2,8 @@
 
 namespace AES;
 
+use AES\Exception\KeyLengthException;
+
 class Key
 {
     private $bits;

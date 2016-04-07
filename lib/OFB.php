@@ -2,6 +2,8 @@
 
 namespace AES;
 
+use AES\Exception\IVLengthException;
+
 class OFB extends Cipher
 {
     private $key;

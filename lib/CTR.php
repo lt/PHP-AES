@@ -2,6 +2,8 @@
 
 namespace AES;
 
+use AES\Exception\IVLengthException;
+
 class CTR extends Cipher
 {
     private $key;

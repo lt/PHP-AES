@@ -1,5 +1,7 @@
 <?php declare(strict_types = 1);
 
-namespace AES;
+namespace AES\Exception;
+
+use AES\Exception;
 
 class KeyLengthException extends Exception {}

@@ -2,6 +2,8 @@
 
 namespace AES;
 
+use AES\Exception\BlockLengthException;
+
 abstract class Cipher
 {
     private function mixColumns(int $a, int $b, int $c, int $d): int
