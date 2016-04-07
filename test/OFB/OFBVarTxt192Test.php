@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\OFB;
+use AES\Mode\OFB;
 use AES\Key;
 
 class OFBVarTxt192 extends \PHPUnit_Framework_TestCase

@@ -7,7 +7,7 @@
 
 namespace AES\Test;
 
-use AES\CTR;
+use AES\Mode\CTR;
 use AES\Key;
 
 class CTR192 extends \PHPUnit_Framework_TestCase

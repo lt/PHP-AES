@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\CFB;
+use AES\Mode\CFB;
 use AES\Key;
 
 class CFB128GFSbox192 extends \PHPUnit_Framework_TestCase

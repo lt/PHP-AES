@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\ECB;
+use AES\Mode\ECB;
 use AES\Key;
 
 class ECBGFSbox256 extends \PHPUnit_Framework_TestCase

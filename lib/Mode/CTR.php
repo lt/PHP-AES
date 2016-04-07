@@ -1,8 +1,10 @@
 <?php declare(strict_types = 1);
 
-namespace AES;
+namespace AES\Mode;
 
+use AES\Cipher;
 use AES\Exception\IVLengthException;
+use AES\Key;
 
 class CTR extends Cipher
 {

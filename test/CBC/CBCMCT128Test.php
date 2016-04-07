@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\CBC;
+use AES\Mode\CBC;
 use AES\Key;
 
 class CBCMCT128 extends \PHPUnit_Framework_TestCase

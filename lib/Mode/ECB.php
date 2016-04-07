@@ -1,6 +1,9 @@
 <?php declare(strict_types = 1);
 
-namespace AES;
+namespace AES\Mode;
+
+use AES\Cipher;
+use AES\Key;
 
 class ECB extends Cipher
 {

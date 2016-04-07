@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\OFB;
+use AES\Mode\OFB;
 use AES\Key;
 
 class OFBMCT256 extends \PHPUnit_Framework_TestCase
