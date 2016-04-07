@@ -38,6 +38,10 @@ abstract class Cipher
 
     protected function encryptBlock(Key $key, string $block): string
     {
+        if (strlen($block) !== 16) {
+            throw new BlockLengthException;
+        }
+        
         $k = $key->encryptionKey();
 
         list(, $a, $b, $c, $d) = unpack('N4', $block);
@@ -68,6 +72,10 @@ abstract class Cipher
 
     protected function decryptBlock(Key $key, string $block): string
     {
+        if (strlen($block) !== 16) {
+            throw new BlockLengthException;
+        }
+        
         $k = $key->decryptionKey();
 
         list(, $a, $b, $c, $d) = unpack('N4', $block);
