@@ -58,17 +58,17 @@ class ANSIX923Test extends \PHPUnit_Framework_TestCase
     function testGetPadLen($message, $expected)
     {
         $scheme = new ANSIX923();
-        $result = $scheme->getPadLen($message . $expected);
+        $result = $scheme->getPaddingLength($message . $expected);
         $this->assertSame(16 - (strlen($message) % 16), $result);
     }
 
     /**
-     * @expectedException \Exception
+     * @expectedException \AES\Exception\InvalidPaddingException
      * @dataProvider badPadProvider
      */
     function testBadGetPadLen($message, $expected)
     {
         $scheme = new ANSIX923();
-        $scheme->getPadLen($message . $expected);
+        $scheme->getPaddingLength($message . $expected);
     }
 } 

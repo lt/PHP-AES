@@ -1,34 +1,38 @@
-<?php
+<?php declare(strict_types = 1);
 
 namespace AES\Padding;
 
+use AES\Exception\InvalidPaddingException;
+
 class PKCS7 implements Scheme
 {
-    function getPadding($message)
+    function getPadding(string $message): string
     {
-        $padLen = (16 - (strlen($message) % 16)) ?: 16;
+        $padLen = 16 - (strlen($message) % 16);
         return str_repeat(chr($padLen), $padLen);
     }
 
-    function getPadLen($message)
+    function getPaddingLength(string $message): int
     {
-        $index = strlen($message);
-        if (!$index || $index % 16) {
-            throw new \Exception('Invalid message');
+        $messageLen = strlen($message);
+        if (!$messageLen || $messageLen % 16) {
+            throw new InvalidPaddingException('Invalid message length');
         }
-
-        $padChar = $message[$index - 1];
+ 
+        $padChar = $message[$messageLen - 1];
         $padLen = ord($padChar);
-        $limit = $index - $padLen;
-        if (!$padLen || $limit < 0) {
-            throw new \Exception('Invalid padding');
+        if (!$padLen || $padLen > 16) {
+            throw new InvalidPaddingException('Invalid padding');
         }
 
-        for ($i = $index - 2; $i > $limit; $i--) {
-            if ($message[$i] !== $padChar) {
-                throw new \Exception('Invalid padding');
+        $i = $messageLen - 1;
+        $limit = $messageLen - $padLen;
+        while ($i > $limit) {
+            if ($message[--$i] !== $padChar) {
+                throw new InvalidPaddingException('Invalid padding');
             }
         }
+
         return $padLen;
     }
 } 
