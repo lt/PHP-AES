@@ -3,21 +3,60 @@
 namespace AES\Mode;
 
 use AES\Cipher;
+use AES\Context\OCB as Context;
+use AES\Exception\IVLengthException;
 use AES\Key;
 
 class OCB extends Cipher
 {
-    const KEYBYTES = 16;
     const NONCEBYTES = 12;
     const TAGBYES = 16;
-    
-    private $key;
-    private $nonce;
 
-    function __construct(Key $key, string $nonce)
+    function init(Key $key, string $nonce): Context
     {
-        $this->key = $key;
-        $this->nonce = $nonce;
+        if (strlen($nonce) !== self::NONCEBYTES) {
+            throw new IVLengthException;
+        }
+
+        $ctx =  new Context;
+
+        $ctx->key = $key;
+
+        $ctx->lstar = $this->encryptBlock($key, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+        $ctx->ldollar = $this->double($ctx->lstar);
+
+        $nonce = str_pad($nonce, 16, "\0", STR_PAD_LEFT);
+        $nonce[0] = chr(((self::TAGBYES << 3) % 128) << 1);
+        $nonceOffset = 16 - self::NONCEBYTES - 1;
+        $nonce[$nonceOffset] = $nonce[$nonceOffset] | "\1";
+        $bottom = ord($nonce[15]) & 0x3f;
+
+        $nonce[15] = $nonce[15] & "\xc0";
+        $ktop = $this->encryptBlock($ctx->key, $nonce);
+
+        $stretch = $ktop;
+
+        $stretch .= substr($ktop, 1, 8) ^ $ktop;
+        $byteshift = (int)($bottom / 8);
+        $bitshift = $bottom % 8;
+
+        $offset = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+        if ($bitshift != 0) {
+            for ($i = 0; $i < 16; $i++) {
+                $offset[$i] = chr((ord($stretch[$i + $byteshift]) << $bitshift) |
+                    (ord($stretch[$i + $byteshift + 1]) >> (8 - $bitshift)));
+            }
+        }
+        else {
+            for ($i = 0; $i < 16; $i++) {
+                $offset[$i] = $stretch[$i + $byteshift];
+            }
+        }
+
+        $ctx->offset = $offset;
+        $ctx->sum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+
+        return $ctx;
     }
 
     private function double(string $block): string
@@ -41,12 +80,9 @@ class OCB extends Cipher
         return $l;
     }
 
-    private function hash(string $aad): string
+    private function hash(Context $ctx, string $aad): string
     {
         $abytes = strlen($aad);
-
-        $lstar = $this->encryptBlock($this->key, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
-        $ldollar = $this->double($lstar);
 
         $sum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
         $offset = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
@@ -54,77 +90,48 @@ class OCB extends Cipher
         $in = 0;
         $blocks = $abytes >> 4;
         for ($i = 1; $i <= $blocks; $i++, $in += 16) {
-            $tmp = $this->calc_L_i($ldollar, $i);
+            $tmp = $this->calc_L_i($ctx->ldollar, $i);
             $offset = $offset ^ $tmp;
             $tmp = $offset ^ substr($aad, $in, 16);
-            $tmp = $this->encryptBlock($this->key, $tmp);
+            $tmp = $this->encryptBlock($ctx->key, $tmp);
             $sum = $sum ^ $tmp;
         }
 
         $abytes %= 16;
         if ($abytes) {
-            $offset = $offset ^ $lstar;
+            $offset = $offset ^ $ctx->lstar;
             $tmp = substr($aad, $in);
             $tmp .= "\x80" . str_repeat("\0", 16 - $abytes - 1);
             $tmp = $offset ^ $tmp;
-            $tmp = $this->encryptBlock($this->key, $tmp);
+            $tmp = $this->encryptBlock($ctx->key, $tmp);
             $sum = $sum ^ $tmp;
         }
 
         return $sum;
     }
     
-    function encrypt(string $message, string $aad): string
+    function encrypt(Context $ctx, string $message): string
     {
-        $lstar = $this->encryptBlock($this->key, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
-        $ldollar = $this->double($lstar);
+        $offset = $ctx->offset;
+        $sum = $ctx->sum;
 
-        $nonce = str_pad($this->nonce, 16, "\0", STR_PAD_LEFT);
-        $nonce[0] = chr(((self::TAGBYES << 3) % 128) << 1);
-        $nonceOffset = 16 - self::NONCEBYTES - 1;
-        $nonce[$nonceOffset] = $nonce[$nonceOffset] | "\1";
-        $bottom = ord($nonce[15]) & 0x3f;
-
-        $nonce[15] = $nonce[15] & "\xc0";
-        $ktop = $this->encryptBlock($this->key, $nonce);
-
-        $stretch = $ktop;
-
-        $stretch .= substr($ktop, 1, 8) ^ $ktop;
-        $byteshift = (int)($bottom / 8);
-        $bitshift = $bottom % 8;
-
-        $offset = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-        if ($bitshift != 0) {
-            for ($i = 0; $i < 16; $i++) {
-                $offset[$i] = chr((ord($stretch[$i + $byteshift]) << $bitshift) |
-                    (ord($stretch[$i + $byteshift + 1]) >> (8 - $bitshift)));
-            }
-        }
-        else {
-            for ($i = 0; $i < 16; $i++) {
-                $offset[$i] = $stretch[$i + $byteshift];
-            }
-        }
-
-        $sum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
         $out = '';
         $in = 0;
         $messageLen = strlen($message);
         $blocks = $messageLen >> 4;
         for ($i = 1; $i <= $blocks; $i++, $in += 16) {
-            $tmp = $this->calc_L_i($ldollar, $i);
+            $tmp = $this->calc_L_i($ctx->ldollar, $i);
             $offset = $offset ^ $tmp;
             $tmp = $offset ^ substr($message, $in, 16);
-            $tmp = $this->encryptBlock($this->key, $tmp);
+            $tmp = $this->encryptBlock($ctx->key, $tmp);
             $out .= $offset ^ $tmp;
             $sum = $sum ^ substr($message, $in, 16);
         }
 
         $messageLen %= 16;
         if ($messageLen) {
-            $offset = $offset ^ $lstar;
-            $pad = $this->encryptBlock($this->key, $offset);
+            $offset = $offset ^ $ctx->lstar;
+            $pad = $this->encryptBlock($ctx->key, $offset);
             $tmp = substr($message, $in);
             $tmp .= "\x80" . str_repeat("\0", 16 - $messageLen - 1);
             $sum = $tmp ^ $sum;
@@ -132,75 +139,35 @@ class OCB extends Cipher
             $out .= substr($pad, 0, $messageLen);
         }
 
-        $tmp = $sum ^ $offset;
-        $tmp = $tmp ^ $ldollar;
-        $tag = $this->encryptBlock($this->key, $tmp);
-        $tmp = $this->hash($aad);
-
-        $tag = $tmp ^ $tag;
-        $out .= $tag;
+        $ctx->offset = $offset;
+        $ctx->sum = $sum;
 
         return $out;
     }
 
-    function decrypt(string $message, string $aad): string
+    function decrypt(Context $ctx, string $message): string
     {
         $messageLen = strlen($message);
 
-        if ($messageLen < self::TAGBYES) {
-            throw new \InvalidArgumentException('Invalid message');
-        }
-
-        $messageLen -= self::TAGBYES;
-
-        $lstar = $this->encryptBlock($this->key, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
-        $ldollar = $this->double($lstar);
-
-        $nonce = str_pad($this->nonce, 16, "\0", STR_PAD_LEFT);
-        $nonce[0] = chr(((self::TAGBYES << 3) % 128) << 1);
-        $nonceOffset = 16 - self::NONCEBYTES - 1;
-        $nonce[$nonceOffset] = $nonce[$nonceOffset] | "\1";
-        $bottom = ord($nonce[15]) & 0x3f;
-
-        $nonce[15] = $nonce[15] & "\xc0";
-        $ktop = $this->encryptBlock($this->key, $nonce);
-
-        $stretch = $ktop;
-
-        $stretch .= substr($ktop, 1, 8) ^ $ktop;
-        $byteshift = (int)($bottom / 8);
-        $bitshift = $bottom % 8;
-
-        $offset = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-        if ($bitshift != 0) {
-            for ($i = 0; $i < 16; $i++) {
-                $offset[$i] = chr((ord($stretch[$i + $byteshift]) << $bitshift) |
-                    (ord($stretch[$i + $byteshift + 1]) >> (8 - $bitshift)));
-            }
-        }
-        else {
-            for ($i = 0; $i < 16; $i++) {
-                $offset[$i] = $stretch[$i + $byteshift];
-            }
-        }
-
-        $sum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+        $offset = $ctx->offset;
+        $sum = $ctx->sum;
+        
         $out = '';
         $in = 0;
         $blocks = $messageLen >> 4;
         for ($i = 1; $i <= $blocks; $i++, $in += 16) {
-            $tmp = $this->calc_L_i($ldollar, $i);
+            $tmp = $this->calc_L_i($ctx->ldollar, $i);
             $offset = $offset ^ $tmp;
             $tmp = $offset ^ substr($message, $in, 16);
-            $tmp = $this->decryptBlock($this->key, $tmp);
+            $tmp = $this->decryptBlock($ctx->key, $tmp);
             $out .= $offset ^ $tmp;
             $sum = $sum ^ substr($out, $in, 16);
         }
 
         $messageLen %= 16;
         if ($messageLen) {
-            $offset = $offset ^ $lstar;
-            $pad = $this->encryptBlock($this->key, $offset);
+            $offset = $offset ^ $ctx->lstar;
+            $pad = $this->encryptBlock($ctx->key, $offset);
             $tmp = substr($message, $in, $messageLen) . substr($pad, $messageLen);
             $tmp = $pad ^ $tmp;
             $tmp[$messageLen] = "\x80";
@@ -209,12 +176,22 @@ class OCB extends Cipher
             $sum = $tmp ^ $sum;
         }
 
-        $tmp = $sum ^ $offset;
-        $tmp = $tmp ^ $ldollar;
-        $tag = $this->encryptBlock($this->key, $tmp);
-        $tmp = $this->hash($aad);
-        $tag = $tmp ^ $tag;
+        $ctx->offset = $offset;
+        $ctx->sum = $sum;
+        
+        return $out;
+    }
 
-        return (substr($message, $in + $messageLen) === $tag) ? $out : false;
+    function finish(Context $ctx, string $aad): string
+    {
+        $offset = $ctx->offset;
+        $sum = $ctx->sum;
+        
+        $tmp = $sum ^ $offset;
+        $tmp = $tmp ^ $ctx->ldollar;
+        $tag = $this->encryptBlock($ctx->key, $tmp);
+        $tmp = $this->hash($ctx, $aad);
+
+        return $tmp ^ $tag;
     }
 }
