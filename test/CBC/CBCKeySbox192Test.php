@@ -49,8 +49,10 @@ class CBCKeySbox192 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $cbc = new CBC(new Key(hex2bin($key)), hex2bin($iv));
-        $result = $cbc->encrypt(hex2bin($plaintext));
+        $key = new Key(hex2bin($key));
+        $cbc = new CBC;
+        $ctx = $cbc->init($key, hex2bin($iv));
+        $result = $cbc->encrypt($ctx, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -59,8 +61,10 @@ class CBCKeySbox192 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $cbc = new CBC(new Key(hex2bin($key)), hex2bin($iv));
-        $result = $cbc->decrypt(hex2bin($ciphertext));
+        $key = new Key(hex2bin($key));
+        $cbc = new CBC;
+        $ctx = $cbc->init($key, hex2bin($iv));
+        $result = $cbc->decrypt($ctx, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

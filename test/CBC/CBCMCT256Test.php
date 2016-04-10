@@ -231,16 +231,18 @@ class CBCMCT256 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $cbc = new CBC(new Key(hex2bin($key)), hex2bin($iv));
+        $key = new Key(hex2bin($key));
+        $cbc = new CBC;
+        $ctx = $cbc->init($key, hex2bin($iv));
         $lastCiphertext = hex2bin($plaintext);
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
 
-        $nextPlaintext = $cbc->encrypt($lastCiphertext);
+        $nextPlaintext = $cbc->encrypt($ctx, $lastCiphertext);
         $lastCiphertext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisCiphertext = $cbc->encrypt($lastCiphertext);
+            $thisCiphertext = $cbc->encrypt($ctx, $lastCiphertext);
             $lastCiphertext = $nextPlaintext;
             $nextPlaintext = $thisCiphertext;
         }
@@ -253,14 +255,16 @@ class CBCMCT256 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $iv, $ciphertext, $plaintext)
     {
-        $cbc = new CBC(new Key(hex2bin($key)), hex2bin($iv));
+        $key = new Key(hex2bin($key));
+        $cbc = new CBC;
+        $ctx = $cbc->init($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
-        $nextCiphertext = $cbc->decrypt($lastPlaintext);
+        $nextCiphertext = $cbc->decrypt($ctx, $lastPlaintext);
         $lastPlaintext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisPlaintext = $cbc->decrypt($lastPlaintext);
+            $thisPlaintext = $cbc->decrypt($ctx, $lastPlaintext);
             $lastPlaintext = $nextCiphertext;
             $nextCiphertext = $thisPlaintext;
         }

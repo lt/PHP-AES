@@ -3,55 +3,57 @@
 namespace AES\Mode;
 
 use AES\Cipher;
+use AES\Context\CBC as Context;
 use AES\Exception\IVLengthException;
 use AES\Key;
 
 class CBC extends Cipher
 {
-    private $key;
-    private $iv;
-
-    function __construct(Key $key, string $iv)
+    function init(Key $key, string $iv): Context
     {
         if (strlen($iv) !== 16) {
             throw new IVLengthException;
         }
 
-        $this->key = $key;
-        $this->iv = $iv;
+        $ctx = new Context;
+
+        $ctx->key = $key;
+        $ctx->state = $iv;
+
+        return $ctx;
     }
-    
-    function encrypt(string $message): string
+
+    function encrypt(Context $ctx, string $message): string
     {
         $offset = 0;
         $out = '';
-        $iv = $this->iv;
+        $iv = $ctx->state;
 
         $blocks = strlen($message) >> 4;
         while ($blocks--) {
-            $out .= $iv = $this->encryptBlock($this->key, substr($message, $offset, 16) ^ $iv);
+            $out .= $iv = $this->encryptBlock($ctx->key, substr($message, $offset, 16) ^ $iv);
             $offset += 16;
         }
 
-        $this->iv = $iv;
+        $ctx->state = $iv;
 
         return $out;
     }
 
-    function decrypt(string $message): string
+    function decrypt(Context $ctx, string $message): string
     {
         $offset = 0;
         $out = '';
-        $iv = $this->iv;
+        $iv = $ctx->state;
 
         $blocks = strlen($message) >> 4;
         while ($blocks--) {
-            $out .= $this->decryptBlock($this->key, $block = substr($message, $offset, 16)) ^ $iv;
+            $out .= $this->decryptBlock($ctx->key, $block = substr($message, $offset, 16)) ^ $iv;
             $iv = $block;
             $offset += 16;
         }
 
-        $this->iv = $iv;
+        $ctx->state = $iv;
 
         return $out;
     }
