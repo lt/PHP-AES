@@ -3,28 +3,28 @@
 namespace AES\Mode;
 
 use AES\Cipher;
-use AES\Exception\IVLengthException;
+use AES\Context\CFB as Context;
 use AES\Key;
 
 class CFB extends Cipher
 {
-    private $key;
-    private $iv;
-    private $buffer = '';
-
-    function __construct(Key $key, string $iv)
+    function init(Key $key, string $iv): Context
     {
         if (strlen($iv) !== 16) {
             throw new IVLengthException;
         }
-        
-        $this->key = $key;
-        $this->iv = $iv;
+
+        $ctx = new Context;
+
+        $ctx->key = $key;
+        $ctx->state = $iv;
+
+        return $ctx;
     }
     
-    function encrypt(string $message): string
+    function encrypt(Context $ctx, string $message): string
     {
-        $keyStream = $this->buffer;
+        $keyStream = $ctx->buffer;
 
         // Since this is a stream mode the output doesn't have to be aligned to block boundaries.
         // However we only get a new IV when a block (i.e. keyStream) has been fully consumed.
@@ -34,7 +34,7 @@ class CFB extends Cipher
 
         // The len(iv) + len(keyStream) should always be equal to 16
         $out = $message ^ $keyStream;
-        $iv = $this->iv . $out;
+        $iv = $ctx->state . $out;
 
         // One becomes '', the other becomes the remainder of itself
         $outLen = strlen($out);
@@ -50,27 +50,27 @@ class CFB extends Cipher
 
         $blocks = ($bytesRequired >> 4) + ($bytesOver > 0);
         while ($blocks--) {
-            $keyStream = $this->encryptBlock($this->key, $iv);
+            $keyStream = $this->encryptBlock($ctx->key, $iv);
             // len(iv) can be less than 16 on the last block
             $out .= $iv = $keyStream ^ substr($message, $offset, 16);
             $offset += 16;
         }
 
-        $this->buffer = $bytesOver ? substr($keyStream, $bytesOver) : '';
-        $this->iv = $iv;
+        $ctx->buffer = $bytesOver ? substr($keyStream, $bytesOver) : '';
+        $ctx->state = $iv;
 
         return $out;
     }
 
-    function decrypt(string $message): string
+    function decrypt(Context $ctx, string $message): string
     {
-        $keyStream = $this->buffer;
+        $keyStream = $ctx->buffer;
 
         // Similar to encrypt, we only get a new iv for each block-aligned
         // piece of ciphertext, so we need to build it as we go in case of
         // many calls with small messages
         $out = $message ^ $keyStream;
-        $iv = $this->iv . substr($message, 0, strlen($out));
+        $iv = $ctx->state . substr($message, 0, strlen($out));
 
         $outLen = strlen($out);
         $message = substr($message, $outLen);
@@ -83,13 +83,13 @@ class CFB extends Cipher
 
         $blocks = ($bytesRequired >> 4) + ($bytesOver > 0);
         while ($blocks--) {
-            $keyStream = $this->encryptBlock($this->key, $iv);
+            $keyStream = $this->encryptBlock($ctx->key, $iv);
             $out .= $keyStream ^ ($iv = substr($message, $offset, 16));
             $offset += 16;
         }
 
-        $this->buffer = $bytesOver ? substr($keyStream, $bytesOver) : '';
-        $this->iv = $iv;
+        $ctx->buffer = $bytesOver ? substr($keyStream, $bytesOver) : '';
+        $ctx->state = $iv;
 
         return $out;
     }

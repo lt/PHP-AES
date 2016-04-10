@@ -231,16 +231,18 @@ class CFB128MCT192 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $cfb = new CFB(new Key(hex2bin($key)), hex2bin($iv));
+        $key = new Key(hex2bin($key));
+        $cfb = new CFB;
+        $ctx = $cfb->init($key, hex2bin($iv));
         $lastCiphertext = hex2bin($plaintext);
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
 
-        $nextPlaintext = $cfb->encrypt($lastCiphertext);
+        $nextPlaintext = $cfb->encrypt($ctx, $lastCiphertext);
         $lastCiphertext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisCiphertext = $cfb->encrypt($lastCiphertext);
+            $thisCiphertext = $cfb->encrypt($ctx, $lastCiphertext);
             $lastCiphertext = $nextPlaintext;
             $nextPlaintext = $thisCiphertext;
         }
@@ -253,14 +255,16 @@ class CFB128MCT192 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $iv, $ciphertext, $plaintext)
     {
-        $cfb = new CFB(new Key(hex2bin($key)), hex2bin($iv));
+        $key = new Key(hex2bin($key));
+        $cfb = new CFB;
+        $ctx = $cfb->init($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
-        $nextCiphertext = $cfb->decrypt($lastPlaintext);
+        $nextCiphertext = $cfb->decrypt($ctx, $lastPlaintext);
         $lastPlaintext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisPlaintext = $cfb->decrypt($lastPlaintext);
+            $thisPlaintext = $cfb->decrypt($ctx, $lastPlaintext);
             $lastPlaintext = $nextCiphertext;
             $nextCiphertext = $thisPlaintext;
         }

@@ -32,8 +32,10 @@ class CFB128GFSbox128 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $cfb = new CFB(new Key(hex2bin($key)), hex2bin($iv));
-        $result = $cfb->encrypt(hex2bin($plaintext));
+        $key = new Key(hex2bin($key));
+        $cfb = new CFB;
+        $ctx = $cfb->init($key, hex2bin($iv));
+        $result = $cfb->encrypt($ctx, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -42,8 +44,10 @@ class CFB128GFSbox128 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $cfb = new CFB(new Key(hex2bin($key)), hex2bin($iv));
-        $result = $cfb->decrypt(hex2bin($ciphertext));
+        $key = new Key(hex2bin($key));
+        $cfb = new CFB;
+        $ctx = $cfb->init($key, hex2bin($iv));
+        $result = $cfb->decrypt($ctx, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }
