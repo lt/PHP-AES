@@ -3,36 +3,37 @@
 namespace AES\Mode;
 
 use AES\Cipher;
+use AES\Context\CTR as Context;
 use AES\Exception\IVLengthException;
 use AES\Key;
 
 class CTR extends Cipher
 {
-    private $key;
-    private $nonce;
-    private $buffer = '';
-
-    function __construct(Key $key, string $nonce)
+    function init(Key $key, string $nonce): Context
     {
         if (strlen($nonce) !== 16) {
             throw new IVLengthException;
         }
-        
-        $this->key = $key;
-        $this->nonce = array_values(unpack('N4', $nonce));
+
+        $ctx = new Context;
+
+        $ctx->key = $key;
+        $ctx->state = array_values(unpack('N4', $nonce));
+
+        return $ctx;
     }
     
-    function encrypt(string $message): string
+    function encrypt(Context $ctx, string $message): string
     {
-        $nonce = $this->nonce;
-        $keyStream = $this->buffer;
+        $nonce = $ctx->state;
+        $keyStream = $ctx->buffer;
 
         $bytesRequired = strlen($message) - strlen($keyStream);
         $bytesOver = $bytesRequired % 16;
 
         $blocks = ($bytesRequired >> 4) + ($bytesOver > 0);
         while ($blocks--) {
-            $keyStream .= $this->encryptBlock($this->key, pack('N4', ...$nonce));
+            $keyStream .= $this->encryptBlock($ctx->key, pack('N4', ...$nonce));
 
             for($i = 3; $i >= 0; $i--) {
                 $nonce[$i]++;
@@ -43,14 +44,15 @@ class CTR extends Cipher
             }
         }
 
-        $this->buffer = substr($keyStream, $bytesRequired);
-        $this->nonce = $nonce;
+        $ctx->buffer = substr($keyStream, $bytesRequired);
+        $ctx->state = $nonce;
 
         return $message ^ $keyStream;
     }
 
-    function decrypt(string $message): string
+    // Unnecessary but signals intent
+    function decrypt(Context $ctx, string $message): string
     {
-        return $this->encrypt($message);
+        return $this->encrypt($ctx, $message);
     }
 } 
