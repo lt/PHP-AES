@@ -41,8 +41,10 @@ class OFBKeySbox256 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $ofb = new OFB(new Key(hex2bin($key)), hex2bin($iv));
-        $result = $ofb->encrypt(hex2bin($plaintext));
+        $key = new Key(hex2bin($key));
+        $ofb = new OFB;
+        $ctx = $ofb->init($key, hex2bin($iv));
+        $result = $ofb->encrypt($ctx, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -51,8 +53,10 @@ class OFBKeySbox256 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $ofb = new OFB(new Key(hex2bin($key)), hex2bin($iv));
-        $result = $ofb->decrypt(hex2bin($ciphertext));
+        $key = new Key(hex2bin($key));
+        $ofb = new OFB;
+        $ctx = $ofb->init($key, hex2bin($iv));
+        $result = $ofb->decrypt($ctx, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

@@ -3,46 +3,48 @@
 namespace AES\Mode;
 
 use AES\Cipher;
+use AES\Context\OFB as Context;
 use AES\Exception\IVLengthException;
 use AES\Key;
 
 class OFB extends Cipher
 {
-    private $key;
-    private $iv;
-    private $buffer = '';
-
-    function __construct(Key $key, string $iv)
+    function init(Key $key, string $iv): Context
     {
         if (strlen($iv) !== 16) {
             throw new IVLengthException;
         }
-        
-        $this->key = $key;
-        $this->iv = $iv;
+
+        $ctx = new Context;
+
+        $ctx->key = $key;
+        $ctx->state = $iv;
+
+        return $ctx;
     }
-    
-    function encrypt(string $message): string
+
+    function encrypt(Context $ctx, string $message): string
     {
-        $iv = $this->iv;
-        $keyStream = $this->buffer;
+        $iv = $ctx->state;
+        $keyStream = $ctx->buffer;
 
         $bytesRequired = strlen($message) - strlen($keyStream);
         $bytesOver = $bytesRequired % 16;
 
         $blocks = ($bytesRequired >> 4) + ($bytesOver > 0);
         while ($blocks--) {
-            $keyStream .= $iv = $this->encryptBlock($this->key, $iv);
+            $keyStream .= $iv = $this->encryptBlock($ctx->key, $iv);
         }
 
-        $this->buffer = substr($keyStream, $bytesRequired);
-        $this->iv = $iv;
+        $ctx->buffer = substr($keyStream, $bytesRequired);
+        $ctx->state = $iv;
 
         return $message ^ $keyStream;
     }
 
-    function decrypt(string $message): string
+    // Unnecessary but signals intent
+    function decrypt(Context $ctx, string $message): string
     {
-        return $this->encrypt($message);
+        return $this->encrypt($ctx, $message);
     }
 } 

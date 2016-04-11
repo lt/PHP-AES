@@ -231,16 +231,18 @@ class OFBMCT256 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $iv, $plaintext, $ciphertext)
     {
-        $ofb = new OFB(new Key(hex2bin($key)), hex2bin($iv));
+        $key = new Key(hex2bin($key));
+        $ofb = new OFB;
+        $ctx = $ofb->init($key, hex2bin($iv));
         $lastCiphertext = hex2bin($plaintext);
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
 
-        $nextPlaintext = $ofb->encrypt($lastCiphertext);
+        $nextPlaintext = $ofb->encrypt($ctx, $lastCiphertext);
         $lastCiphertext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisCiphertext = $ofb->encrypt($lastCiphertext);
+            $thisCiphertext = $ofb->encrypt($ctx, $lastCiphertext);
             $lastCiphertext = $nextPlaintext;
             $nextPlaintext = $thisCiphertext;
         }
@@ -253,14 +255,16 @@ class OFBMCT256 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $iv, $ciphertext, $plaintext)
     {
-        $ofb = new OFB(new Key(hex2bin($key)), hex2bin($iv));
+        $key = new Key(hex2bin($key));
+        $ofb = new OFB;
+        $ctx = $ofb->init($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
-        $nextCiphertext = $ofb->decrypt($lastPlaintext);
+        $nextCiphertext = $ofb->decrypt($ctx, $lastPlaintext);
         $lastPlaintext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisPlaintext = $ofb->decrypt($lastPlaintext);
+            $thisPlaintext = $ofb->decrypt($ctx, $lastPlaintext);
             $lastPlaintext = $nextCiphertext;
             $nextCiphertext = $thisPlaintext;
         }
