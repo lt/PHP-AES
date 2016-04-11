@@ -231,10 +231,11 @@ class ECBMCT192 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $plaintext, $ciphertext)
     {
-        $ecb = new ECB(new Key(hex2bin($key)));
+        $key = new Key(hex2bin($key));
+        $ecb = new ECB;
         $result = hex2bin($plaintext);
         for ($i = 0; $i < 1000; $i++) {
-            $result = $ecb->encrypt($result);
+            $result = $ecb->encrypt($key, $result);
 
         }
         $this->assertSame(hex2bin($ciphertext), $result);
@@ -245,10 +246,11 @@ class ECBMCT192 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $ciphertext, $plaintext)
     {
-        $ecb = new ECB(new Key(hex2bin($key)));
+        $key = new Key(hex2bin($key));
+        $ecb = new ECB;
         $result = hex2bin($ciphertext);
         for ($i = 0; $i < 1000; $i++) {
-            $result = $ecb->decrypt($result);
+            $result = $ecb->decrypt($key, $result);
         }
         $this->assertSame(hex2bin($plaintext), $result);
     }

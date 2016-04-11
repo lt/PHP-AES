@@ -217,8 +217,9 @@ class ECBVarKey192 extends \PHPUnit_Framework_TestCase
      */
     function testEncrypt($key, $plaintext, $ciphertext)
     {
-        $ecb = new ECB(new Key(hex2bin($key)));
-        $result = $ecb->encrypt(hex2bin($plaintext));
+        $key = new Key(hex2bin($key));
+        $ecb = new ECB;
+        $result = $ecb->encrypt($key, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -227,8 +228,9 @@ class ECBVarKey192 extends \PHPUnit_Framework_TestCase
      */
     function testDecrypt($key, $plaintext, $ciphertext)
     {
-        $ecb = new ECB(new Key(hex2bin($key)));
-        $result = $ecb->decrypt(hex2bin($ciphertext));
+        $key = new Key(hex2bin($key));
+        $ecb = new ECB;
+        $result = $ecb->decrypt($key, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }
