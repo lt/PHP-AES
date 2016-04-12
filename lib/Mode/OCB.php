@@ -4,6 +4,8 @@ namespace AES\Mode;
 
 use AES\Cipher;
 use AES\Context\OCB as Context;
+use AES\Exception\BlockLengthException;
+use AES\Exception\InvalidContextException;
 use AES\Exception\IVLengthException;
 use AES\Key;
 
@@ -21,177 +23,174 @@ class OCB extends Cipher
         $ctx =  new Context;
 
         $ctx->key = $key;
-
+        $ctx->sum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
         $ctx->lstar = $this->encryptBlock($key, "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
-        $ctx->ldollar = $this->double($ctx->lstar);
+        $ctx->ldollar = $this->calc_L_i($ctx->lstar, 1);
+        $ctx->blockIndex = 0;
 
         $nonce = str_pad($nonce, 16, "\0", STR_PAD_LEFT);
         $nonce[0] = chr(((self::TAGBYES << 3) % 128) << 1);
         $nonceOffset = 16 - self::NONCEBYTES - 1;
         $nonce[$nonceOffset] = $nonce[$nonceOffset] | "\1";
         $bottom = ord($nonce[15]) & 0x3f;
-
         $nonce[15] = $nonce[15] & "\xc0";
+
         $ktop = $this->encryptBlock($ctx->key, $nonce);
+        list(, $stretch0, $stretch1, $stretch2) = unpack('J3', $ktop . (substr($ktop, 1, 8) ^ $ktop));
 
-        $stretch = $ktop;
-
-        $stretch .= substr($ktop, 1, 8) ^ $ktop;
-        $byteshift = (int)($bottom / 8);
-        $bitshift = $bottom % 8;
-
-        $offset = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-        if ($bitshift != 0) {
-            for ($i = 0; $i < 16; $i++) {
-                $offset[$i] = chr((ord($stretch[$i + $byteshift]) << $bitshift) |
-                    (ord($stretch[$i + $byteshift + 1]) >> (8 - $bitshift)));
-            }
-        }
-        else {
-            for ($i = 0; $i < 16; $i++) {
-                $offset[$i] = $stretch[$i + $byteshift];
-            }
-        }
+        $bottomMask = ~(-1 << $bottom);
+        $offset = pack('J2',
+            $stretch0 << $bottom | (($stretch1 >> (64 - $bottom)) & $bottomMask),
+            $stretch1 << $bottom | (($stretch2 >> (64 - $bottom)) & $bottomMask)
+        );
 
         $ctx->offset = $offset;
-        $ctx->sum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
         return $ctx;
     }
 
-    private function double(string $block): string
-    {
-        $out = '';
-        for ($i = 0; $i < 15; $i++) {
-            $out .= chr((ord($block[$i]) << 1) | (ord($block[$i + 1]) >> 7));
-        }
-
-        return $out . chr((ord($block[15]) << 1) ^ ((ord($block[0]) >> 7) * 135));
-    }
-
     private function calc_L_i(string $ldollar, int $i): string
     {
-        $l = $this->double($ldollar);
+        list(, $l0, $l1) = unpack('J2', $ldollar);
 
-        for (; ($i & 1) === 0; $i >>= 1) {
-            $l = $this->double($l);
-        }
+        do {
+            $tmp = ($l0 >> 63 & 1);
+            $l0 = $l0 << 1 | ($l1 >> 63 & 1);
+            $l1 = $l1 << 1 ^ ($tmp * 135);
+        } while (($i & 1) === 0 && $i >>= 1);
 
-        return $l;
+        return pack('J2', $l0, $l1);
     }
 
-    private function hash(Context $ctx, string $aad): string
+    private function hash(Context $ctx, string $message): string
     {
-        $abytes = strlen($aad);
-
-        $sum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
         $offset = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+        $sum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
-        $in = 0;
-        $blocks = $abytes >> 4;
-        for ($i = 1; $i <= $blocks; $i++, $in += 16) {
-            $tmp = $this->calc_L_i($ctx->ldollar, $i);
-            $offset = $offset ^ $tmp;
-            $tmp = $offset ^ substr($aad, $in, 16);
-            $tmp = $this->encryptBlock($ctx->key, $tmp);
-            $sum = $sum ^ $tmp;
+        $messageOffset = 0;
+        $messageLen = strlen($message);
+        $blocks = $messageLen >> 4;
+        for ($i = 1; $i <= $blocks; $i++, $messageOffset += 16) {
+            $offset ^= $this->calc_L_i($ctx->ldollar, $i);
+            $sum ^= $this->encryptBlock($ctx->key, $offset ^ substr($message, $messageOffset, 16));
         }
 
-        $abytes %= 16;
-        if ($abytes) {
-            $offset = $offset ^ $ctx->lstar;
-            $tmp = substr($aad, $in);
-            $tmp .= "\x80" . str_repeat("\0", 16 - $abytes - 1);
-            $tmp = $offset ^ $tmp;
-            $tmp = $this->encryptBlock($ctx->key, $tmp);
-            $sum = $sum ^ $tmp;
+        if ($messageLen % 16) {
+            $sum ^= $this->encryptBlock($ctx->key, $offset ^ $ctx->lstar ^ (substr($message, $messageOffset) . "\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"));
         }
 
         return $sum;
     }
-    
-    function encrypt(Context $ctx, string $message): string
-    {
-        $offset = $ctx->offset;
-        $sum = $ctx->sum;
 
-        $out = '';
-        $in = 0;
-        $messageLen = strlen($message);
-        $blocks = $messageLen >> 4;
-        for ($i = 1; $i <= $blocks; $i++, $in += 16) {
-            $tmp = $this->calc_L_i($ctx->ldollar, $i);
-            $offset = $offset ^ $tmp;
-            $tmp = $offset ^ substr($message, $in, 16);
-            $tmp = $this->encryptBlock($ctx->key, $tmp);
-            $out .= $offset ^ $tmp;
-            $sum = $sum ^ substr($message, $in, 16);
+    function encrypt(Context $ctx, string $message, bool $final = false): string
+    {
+        if ($ctx->finalised) {
+            throw new InvalidContextException('Context cannot be reused after the final block has been processed');
         }
 
-        $messageLen %= 16;
-        if ($messageLen) {
-            $offset = $offset ^ $ctx->lstar;
-            $pad = $this->encryptBlock($ctx->key, $offset);
-            $tmp = substr($message, $in);
-            $tmp .= "\x80" . str_repeat("\0", 16 - $messageLen - 1);
-            $sum = $tmp ^ $sum;
-            $pad = $tmp ^ $pad;
-            $out .= substr($pad, 0, $messageLen);
+        if ($ctx->mode === Context::MODE_DECRYPT) {
+            throw new InvalidContextException('Decryption context supplied to encryption method');
+        }
+        $ctx->mode = Context::MODE_ENCRYPT;
+
+        $messageLen = strlen($message);
+        $messageRemainder = $messageLen % 16;
+
+        if ($messageRemainder && !$final) {
+            throw new BlockLengthException('Message length must be a multiple of 16 when $final == false');
+        }
+
+        $offset = $ctx->offset;
+        $sum = $ctx->sum;
+        $blockIndex = $ctx->blockIndex;
+
+        $out = '';
+        $messageOffset = 0;
+        $blocks = $messageLen >> 4;
+        while ($blocks--) {
+            $block = substr($message, $messageOffset, 16);
+            $offset ^= $this->calc_L_i($ctx->ldollar, ++$blockIndex);
+
+            $sum ^= $block;
+            $out .= $offset ^ $this->encryptBlock($ctx->key, $offset ^ $block);
+
+            $messageOffset += 16;
+        }
+
+        if ($final && $messageRemainder) {
+            $ctx->finalised = true;
+
+            $block = substr($message, $messageOffset);
+            $offset ^= $ctx->lstar;
+
+            $pad = $block ^ $this->encryptBlock($ctx->key, $offset);
+            $sum ^= $block . "\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+            $out .= $pad;
         }
 
         $ctx->offset = $offset;
         $ctx->sum = $sum;
+        $ctx->blockIndex = $blockIndex;
 
         return $out;
     }
 
-    function decrypt(Context $ctx, string $message): string
+    function decrypt(Context $ctx, string $message, bool $final = false): string
     {
+        if ($ctx->finalised) {
+            throw new InvalidContextException('Context cannot be reused after the final block has been processed');
+        }
+
+        if ($ctx->mode === Context::MODE_ENCRYPT) {
+            throw new InvalidContextException('Encryption context supplied to decryption method');
+        }
+        $ctx->mode = Context::MODE_DECRYPT;
+
         $messageLen = strlen($message);
+        $messageRemainder = $messageLen % 16;
+
+        if ($messageRemainder && !$final) {
+            throw new BlockLengthException('Message length must be a multiple of 16 when $final == false');
+        }
 
         $offset = $ctx->offset;
         $sum = $ctx->sum;
-        
+        $blockIndex = $ctx->blockIndex;
+
         $out = '';
-        $in = 0;
+        $messageOffset = 0;
         $blocks = $messageLen >> 4;
-        for ($i = 1; $i <= $blocks; $i++, $in += 16) {
-            $tmp = $this->calc_L_i($ctx->ldollar, $i);
-            $offset = $offset ^ $tmp;
-            $tmp = $offset ^ substr($message, $in, 16);
-            $tmp = $this->decryptBlock($ctx->key, $tmp);
-            $out .= $offset ^ $tmp;
-            $sum = $sum ^ substr($out, $in, 16);
+        while ($blocks--) {
+            $block = substr($message, $messageOffset, 16);
+            $offset ^= $this->calc_L_i($ctx->ldollar, ++$blockIndex);
+
+            $plain = $offset ^ $this->decryptBlock($ctx->key, $offset ^ $block);
+            $sum ^= $plain;
+            $out .= $plain;
+
+            $messageOffset += 16;
         }
 
-        $messageLen %= 16;
-        if ($messageLen) {
-            $offset = $offset ^ $ctx->lstar;
-            $pad = $this->encryptBlock($ctx->key, $offset);
-            $tmp = substr($message, $in, $messageLen) . substr($pad, $messageLen);
-            $tmp = $pad ^ $tmp;
-            $tmp[$messageLen] = "\x80";
-            $out .= substr($tmp, 0, $messageLen);
+        if ($final && $messageRemainder) {
+            $ctx->finalised = true;
 
-            $sum = $tmp ^ $sum;
+            $tmp = substr($message, $messageOffset);
+            $offset ^= $ctx->lstar;
+
+            $pad = $tmp ^ $this->encryptBlock($ctx->key, $offset);
+            $sum ^= $pad . "\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+            $out .= $pad;
         }
 
         $ctx->offset = $offset;
         $ctx->sum = $sum;
+        $ctx->blockIndex = $blockIndex;
         
         return $out;
     }
 
-    function finish(Context $ctx, string $aad): string
+    function tag(Context $ctx, string $aad = ''): string
     {
-        $offset = $ctx->offset;
-        $sum = $ctx->sum;
-        
-        $tmp = $sum ^ $offset;
-        $tmp = $tmp ^ $ctx->ldollar;
-        $tag = $this->encryptBlock($ctx->key, $tmp);
-        $tmp = $this->hash($ctx, $aad);
-
-        return $tmp ^ $tag;
+        return $this->hash($ctx, $aad) ^ $this->encryptBlock($ctx->key, $ctx->sum ^ $ctx->offset ^ $ctx->ldollar);
     }
 }

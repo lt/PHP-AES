@@ -41,8 +41,8 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $ocb = new OCB();
         $ctx = $ocb->init($key, hex2bin($nonce));
 
-        $result = $ocb->encrypt($ctx, hex2bin($plaintext));
-        $resultTag = $ocb->finish($ctx, hex2bin($aad));
+        $result = $ocb->encrypt($ctx, hex2bin($plaintext), true);
+        $resultTag = $ocb->tag($ctx, hex2bin($aad));
 
         $this->assertSame(hex2bin($ciphertext), $result);
         $this->assertSame(hex2bin($tag), $resultTag);
@@ -57,8 +57,50 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $ocb = new OCB();
         $ctx = $ocb->init($key, hex2bin($nonce));
 
-        $result = $ocb->decrypt($ctx, hex2bin($ciphertext));
-        $resultTag = $ocb->finish($ctx, hex2bin($aad));
+        $result = $ocb->decrypt($ctx, hex2bin($ciphertext), true);
+        $resultTag = $ocb->tag($ctx, hex2bin($aad));
+
+        $this->assertSame(hex2bin($plaintext), $result);
+        $this->assertSame(hex2bin($tag), $resultTag);
+    }
+
+    /**
+     * @dataProvider caseProvider
+     */
+    function testEncryptMultiMessage($nonce, $aad, $plaintext, $ciphertext, $tag)
+    {
+        $key = new Key(hex2bin($this->key));
+        $ocb = new OCB();
+        $ctx = $ocb->init($key, hex2bin($nonce));
+
+        $result = '';
+        $plain = str_split(hex2bin($plaintext), 16);
+        for ($i = 0; $i < count($plain) - 1; $i++) {
+            $result .= $ocb->encrypt($ctx, $plain[$i]);
+        }
+        $result .= $ocb->encrypt($ctx, end($plain), true);
+        $resultTag = $ocb->tag($ctx, hex2bin($aad));
+
+        $this->assertSame(hex2bin($ciphertext), $result);
+        $this->assertSame(hex2bin($tag), $resultTag);
+    }
+
+    /**
+     * @dataProvider caseProvider
+     */
+    function testDecryptMultiMessage($nonce, $aad, $plaintext, $ciphertext, $tag)
+    {
+        $key = new Key(hex2bin($this->key));
+        $ocb = new OCB();
+        $ctx = $ocb->init($key, hex2bin($nonce));
+
+        $result = '';
+        $cipher = str_split(hex2bin($ciphertext), 16);
+        for ($i = 0; $i < count($cipher) - 1; $i++) {
+            $result .= $ocb->decrypt($ctx, $cipher[$i]);
+        }
+        $result .= $ocb->decrypt($ctx, end($cipher), true);
+        $resultTag = $ocb->tag($ctx, hex2bin($aad));
 
         $this->assertSame(hex2bin($plaintext), $result);
         $this->assertSame(hex2bin($tag), $resultTag);

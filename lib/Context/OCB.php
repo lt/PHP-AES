@@ -2,7 +2,9 @@
 
 namespace AES\Context;
 
-class OCB
+use AES\Context;
+
+class OCB extends Context
 {
     public $key;
 
@@ -11,6 +13,8 @@ class OCB
 
     public $sum;
     public $offset;
+    public $blockIndex;
 
-    public $buffer = '';
+    public $mode;
+    public $finalised = false;
 }
