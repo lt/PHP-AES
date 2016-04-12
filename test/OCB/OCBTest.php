@@ -39,9 +39,10 @@ class OCBTest extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
-        $ctx = $ocb->init($key, hex2bin($nonce));
 
-        $result = $ocb->encrypt($ctx, hex2bin($plaintext), true);
+        $ctx = $ocb->init($key, hex2bin($nonce));
+        $result = $ocb->encrypt($ctx, hex2bin($plaintext));
+        $result .= $ocb->finalise($ctx);
         $resultTag = $ocb->tag($ctx, hex2bin($aad));
 
         $this->assertSame(hex2bin($ciphertext), $result);
@@ -55,9 +56,10 @@ class OCBTest extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
-        $ctx = $ocb->init($key, hex2bin($nonce));
 
-        $result = $ocb->decrypt($ctx, hex2bin($ciphertext), true);
+        $ctx = $ocb->init($key, hex2bin($nonce));
+        $result = $ocb->decrypt($ctx, hex2bin($ciphertext));
+        $result .= $ocb->finalise($ctx);
         $resultTag = $ocb->tag($ctx, hex2bin($aad));
 
         $this->assertSame(hex2bin($plaintext), $result);
@@ -75,10 +77,10 @@ class OCBTest extends \PHPUnit_Framework_TestCase
 
         $result = '';
         $plain = str_split(hex2bin($plaintext), 16);
-        for ($i = 0; $i < count($plain) - 1; $i++) {
-            $result .= $ocb->encrypt($ctx, $plain[$i]);
+        foreach ($plain as $chunk) {
+            $result .= $ocb->encrypt($ctx, $chunk);
         }
-        $result .= $ocb->encrypt($ctx, end($plain), true);
+        $result .= $ocb->finalise($ctx);
         $resultTag = $ocb->tag($ctx, hex2bin($aad));
 
         $this->assertSame(hex2bin($ciphertext), $result);
@@ -96,10 +98,10 @@ class OCBTest extends \PHPUnit_Framework_TestCase
 
         $result = '';
         $cipher = str_split(hex2bin($ciphertext), 16);
-        for ($i = 0; $i < count($cipher) - 1; $i++) {
-            $result .= $ocb->decrypt($ctx, $cipher[$i]);
+        foreach ($cipher as $chunk) {
+            $result .= $ocb->decrypt($ctx, $chunk);
         }
-        $result .= $ocb->decrypt($ctx, end($cipher), true);
+        $result .= $ocb->finalise($ctx);
         $resultTag = $ocb->tag($ctx, hex2bin($aad));
 
         $this->assertSame(hex2bin($plaintext), $result);

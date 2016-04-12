@@ -14,6 +14,8 @@ class OCB extends Context
     public $sum;
     public $offset;
     public $blockIndex;
+    
+    public $buffer = '';
 
     public $mode;
     public $finalised = false;

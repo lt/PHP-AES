@@ -4,7 +4,6 @@ namespace AES\Mode;
 
 use AES\Cipher;
 use AES\Context\OCB as Context;
-use AES\Exception\BlockLengthException;
 use AES\Exception\InvalidContextException;
 use AES\Exception\IVLengthException;
 use AES\Key;
@@ -82,7 +81,7 @@ class OCB extends Cipher
         return $sum;
     }
 
-    function encrypt(Context $ctx, string $message, bool $final = false): string
+    function encrypt(Context $ctx, string $message): string
     {
         if ($ctx->finalised) {
             throw new InvalidContextException('Context cannot be reused after the final block has been processed');
@@ -93,12 +92,7 @@ class OCB extends Cipher
         }
         $ctx->mode = Context::MODE_ENCRYPT;
 
-        $messageLen = strlen($message);
-        $messageRemainder = $messageLen % 16;
-
-        if ($messageRemainder && !$final) {
-            throw new BlockLengthException('Message length must be a multiple of 16 when $final == false');
-        }
+        $message = $ctx->buffer . $message;
 
         $offset = $ctx->offset;
         $sum = $ctx->sum;
@@ -106,7 +100,7 @@ class OCB extends Cipher
 
         $out = '';
         $messageOffset = 0;
-        $blocks = $messageLen >> 4;
+        $blocks = strlen($message) >> 4;
         while ($blocks--) {
             $block = substr($message, $messageOffset, 16);
             $offset ^= $this->calc_L_i($ctx->ldollar, ++$blockIndex);
@@ -117,25 +111,15 @@ class OCB extends Cipher
             $messageOffset += 16;
         }
 
-        if ($final && $messageRemainder) {
-            $ctx->finalised = true;
-
-            $block = substr($message, $messageOffset);
-            $offset ^= $ctx->lstar;
-
-            $pad = $block ^ $this->encryptBlock($ctx->key, $offset);
-            $sum ^= $block . "\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-            $out .= $pad;
-        }
-
         $ctx->offset = $offset;
         $ctx->sum = $sum;
         $ctx->blockIndex = $blockIndex;
+        $ctx->buffer = substr($message, $messageOffset);
 
         return $out;
     }
 
-    function decrypt(Context $ctx, string $message, bool $final = false): string
+    function decrypt(Context $ctx, string $message): string
     {
         if ($ctx->finalised) {
             throw new InvalidContextException('Context cannot be reused after the final block has been processed');
@@ -146,20 +130,14 @@ class OCB extends Cipher
         }
         $ctx->mode = Context::MODE_DECRYPT;
 
-        $messageLen = strlen($message);
-        $messageRemainder = $messageLen % 16;
-
-        if ($messageRemainder && !$final) {
-            throw new BlockLengthException('Message length must be a multiple of 16 when $final == false');
-        }
-
+        $message = $ctx->buffer . $message;
         $offset = $ctx->offset;
         $sum = $ctx->sum;
         $blockIndex = $ctx->blockIndex;
 
         $out = '';
         $messageOffset = 0;
-        $blocks = $messageLen >> 4;
+        $blocks = strlen($message) >> 4;
         while ($blocks--) {
             $block = substr($message, $messageOffset, 16);
             $offset ^= $this->calc_L_i($ctx->ldollar, ++$blockIndex);
@@ -171,26 +149,49 @@ class OCB extends Cipher
             $messageOffset += 16;
         }
 
-        if ($final && $messageRemainder) {
-            $ctx->finalised = true;
-
-            $tmp = substr($message, $messageOffset);
-            $offset ^= $ctx->lstar;
-
-            $pad = $tmp ^ $this->encryptBlock($ctx->key, $offset);
-            $sum ^= $pad . "\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-            $out .= $pad;
-        }
-
         $ctx->offset = $offset;
         $ctx->sum = $sum;
         $ctx->blockIndex = $blockIndex;
+        $ctx->buffer = substr($message, $messageOffset);
         
         return $out;
+    }
+    
+    function finalise(Context $ctx): string
+    {
+        if ($ctx->finalised) {
+            throw new InvalidContextException('Final block has already been processed');
+        }
+        $ctx->finalised = true;
+        
+        $pad = '';
+        $message = $ctx->buffer;
+        $messageRemainder = strlen($message) % 16;
+        
+        if ($messageRemainder) {
+            $ctx->offset ^= $ctx->lstar;
+
+            $pad = $message ^ $this->encryptBlock($ctx->key, $ctx->offset);
+            
+            if ($ctx->mode === Context::MODE_ENCRYPT) {
+                $ctx->sum ^= $message . "\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+            }
+            else {
+                $ctx->sum ^= $pad . "\x80\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+            }
+        }
+
+        $ctx->buffer = '';
+        return $pad;
     }
 
     function tag(Context $ctx, string $aad = ''): string
     {
         return $this->hash($ctx, $aad) ^ $this->encryptBlock($ctx->key, $ctx->sum ^ $ctx->offset ^ $ctx->ldollar);
+    }
+
+    function verify(Context $ctx, string $tag, string $aad = ''): string
+    {
+        return hash_equals($this->tag($ctx, $aad), $tag);
     }
 }
