@@ -2,7 +2,9 @@
 
 namespace AES\Context;
 
-class CTR
+use AES\Context;
+
+class CTR extends Context
 {
     public $key;
     public $state;

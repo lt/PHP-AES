@@ -2,7 +2,9 @@
 
 namespace AES\Context;
 
-class CFB
+use AES\Context;
+
+class CFB extends Context
 {
     public $key;
     public $state;

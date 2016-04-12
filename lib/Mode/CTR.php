@@ -4,6 +4,7 @@ namespace AES\Mode;
 
 use AES\Cipher;
 use AES\Context\CTR as Context;
+use AES\Exception\InvalidContextException;
 use AES\Exception\IVLengthException;
 use AES\Key;
 
@@ -23,7 +24,7 @@ class CTR extends Cipher
         return $ctx;
     }
     
-    function encrypt(Context $ctx, string $message): string
+    private function transcrypt(Context $ctx, string $message): string
     {
         $nonce = $ctx->state;
         $keyStream = $ctx->buffer;
@@ -49,10 +50,24 @@ class CTR extends Cipher
 
         return $message ^ $keyStream;
     }
+    
+    function encrypt(Context $ctx, string $message): string
+    {
+        if ($ctx->mode === Context::MODE_DECRYPT) {
+            throw new InvalidContextException('Decryption context supplied to encryption method');
+        }
+        $ctx->mode = Context::MODE_ENCRYPT;
 
-    // Unnecessary but signals intent
+        return $this->transcrypt($ctx, $message);
+    }
+
     function decrypt(Context $ctx, string $message): string
     {
-        return $this->encrypt($ctx, $message);
+        if ($ctx->mode === Context::MODE_ENCRYPT) {
+            throw new InvalidContextException('Encryption context supplied to decryption method');
+        }
+        $ctx->mode = Context::MODE_DECRYPT;
+
+        return $this->transcrypt($ctx, $message);
     }
 } 

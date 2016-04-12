@@ -4,6 +4,7 @@ namespace AES\Mode;
 
 use AES\Cipher;
 use AES\Context\OFB as Context;
+use AES\Exception\InvalidContextException;
 use AES\Exception\IVLengthException;
 use AES\Key;
 
@@ -23,7 +24,7 @@ class OFB extends Cipher
         return $ctx;
     }
 
-    function encrypt(Context $ctx, string $message): string
+    function transcrypt(Context $ctx, string $message): string
     {
         $iv = $ctx->state;
         $keyStream = $ctx->buffer;
@@ -42,9 +43,23 @@ class OFB extends Cipher
         return $message ^ $keyStream;
     }
 
-    // Unnecessary but signals intent
+    function encrypt(Context $ctx, string $message): string
+    {
+        if ($ctx->mode === Context::MODE_DECRYPT) {
+            throw new InvalidContextException('Decryption context supplied to encryption method');
+        }
+        $ctx->mode = Context::MODE_ENCRYPT;
+
+        return $this->encrypt($ctx, $message);
+    }
+
     function decrypt(Context $ctx, string $message): string
     {
+        if ($ctx->mode === Context::MODE_ENCRYPT) {
+            throw new InvalidContextException('Encryption context supplied to decryption method');
+        }
+        $ctx->mode = Context::MODE_DECRYPT;
+
         return $this->encrypt($ctx, $message);
     }
 } 

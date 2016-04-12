@@ -2,7 +2,9 @@
 
 namespace AES\Context;
 
-class CBC
+use AES\Context;
+
+class CBC extends Context
 {
     public $key;
     public $state;

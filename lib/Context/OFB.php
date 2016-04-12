@@ -2,7 +2,9 @@
 
 namespace AES\Context;
 
-class OFB
+use AES\Context;
+
+class OFB extends Context
 {
     public $key;
     public $state;

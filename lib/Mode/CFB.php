@@ -4,6 +4,7 @@ namespace AES\Mode;
 
 use AES\Cipher;
 use AES\Context\CFB as Context;
+use AES\Exception\InvalidContextException;
 use AES\Key;
 
 class CFB extends Cipher
@@ -24,6 +25,11 @@ class CFB extends Cipher
     
     function encrypt(Context $ctx, string $message): string
     {
+        if ($ctx->mode === Context::MODE_DECRYPT) {
+            throw new InvalidContextException('Decryption context supplied to encryption method');
+        }
+        $ctx->mode = Context::MODE_ENCRYPT;
+        
         $keyStream = $ctx->buffer;
 
         // Since this is a stream mode the output doesn't have to be aligned to block boundaries.
@@ -64,6 +70,11 @@ class CFB extends Cipher
 
     function decrypt(Context $ctx, string $message): string
     {
+        if ($ctx->mode === Context::MODE_ENCRYPT) {
+            throw new InvalidContextException('Encryption context supplied to decryption method');
+        }
+        $ctx->mode = Context::MODE_DECRYPT;
+
         $keyStream = $ctx->buffer;
 
         // Similar to encrypt, we only get a new iv for each block-aligned
