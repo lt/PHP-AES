@@ -41,9 +41,12 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $ocb = new OCB();
 
         $ctx = $ocb->init($key, hex2bin($nonce));
+        $ocb->aad($ctx, hex2bin($aad));
+
         $result = $ocb->encrypt($ctx, hex2bin($plaintext));
         $result .= $ocb->finalise($ctx);
-        $resultTag = $ocb->tag($ctx, hex2bin($aad));
+
+        $resultTag = $ocb->tag($ctx);
 
         $this->assertSame(hex2bin($ciphertext), $result);
         $this->assertSame(hex2bin($tag), $resultTag);
@@ -58,9 +61,11 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $ocb = new OCB();
 
         $ctx = $ocb->init($key, hex2bin($nonce));
+        $ocb->aad($ctx, hex2bin($aad));
+
         $result = $ocb->decrypt($ctx, hex2bin($ciphertext));
         $result .= $ocb->finalise($ctx);
-        $resultTag = $ocb->tag($ctx, hex2bin($aad));
+        $resultTag = $ocb->tag($ctx);
 
         $this->assertSame(hex2bin($plaintext), $result);
         $this->assertSame(hex2bin($tag), $resultTag);
@@ -73,15 +78,22 @@ class OCBTest extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
+
         $ctx = $ocb->init($key, hex2bin($nonce));
 
+        $data = str_split(hex2bin($aad), 7);
+        foreach ($data as $chunk) {
+            $ocb->aad($ctx, $chunk);
+        }
+
         $result = '';
-        $plain = str_split(hex2bin($plaintext), 16);
+        $plain = str_split(hex2bin($plaintext), 7);
         foreach ($plain as $chunk) {
             $result .= $ocb->encrypt($ctx, $chunk);
         }
+
         $result .= $ocb->finalise($ctx);
-        $resultTag = $ocb->tag($ctx, hex2bin($aad));
+        $resultTag = $ocb->tag($ctx);
 
         $this->assertSame(hex2bin($ciphertext), $result);
         $this->assertSame(hex2bin($tag), $resultTag);
@@ -94,15 +106,22 @@ class OCBTest extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
+
         $ctx = $ocb->init($key, hex2bin($nonce));
 
+        $data = str_split(hex2bin($aad), 7);
+        foreach ($data as $chunk) {
+            $ocb->aad($ctx, $chunk);
+        }
+
         $result = '';
-        $cipher = str_split(hex2bin($ciphertext), 16);
+        $cipher = str_split(hex2bin($ciphertext), 7);
         foreach ($cipher as $chunk) {
             $result .= $ocb->decrypt($ctx, $chunk);
         }
+
         $result .= $ocb->finalise($ctx);
-        $resultTag = $ocb->tag($ctx, hex2bin($aad));
+        $resultTag = $ocb->tag($ctx);
 
         $this->assertSame(hex2bin($plaintext), $result);
         $this->assertSame(hex2bin($tag), $resultTag);

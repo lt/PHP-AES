@@ -11,11 +11,15 @@ class OCB extends Context
     public $lstar;
     public $ldollar;
 
-    public $sum;
-    public $offset;
-    public $blockIndex;
+    public $messageSum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+    public $messageOffset; // Calculated during init
+    public $messageBlock = 0;
+    public $messageBuffer = '';
     
-    public $buffer = '';
+    public $aadSum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+    public $aadOffset = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+    public $aadBlock = 0;
+    public $aadBuffer = '';
 
     public $mode;
     public $finalised = false;
