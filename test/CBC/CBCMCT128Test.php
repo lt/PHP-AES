@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\Mode\CBC;
+use AES\CBC;
 use AES\Key;
 
 class CBCMCT128 extends \PHPUnit_Framework_TestCase
@@ -233,7 +233,7 @@ class CBCMCT128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cbc = new CBC;
-        $ctx = $cbc->init($key, hex2bin($iv));
+        $ctx = $cbc->initEncryption($key, hex2bin($iv));
         $lastCiphertext = hex2bin($plaintext);
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
@@ -257,7 +257,7 @@ class CBCMCT128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cbc = new CBC;
-        $ctx = $cbc->init($key, hex2bin($iv));
+        $ctx = $cbc->initDecryption($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
         $nextCiphertext = $cbc->decrypt($ctx, $lastPlaintext);

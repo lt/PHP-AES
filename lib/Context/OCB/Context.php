@@ -1,20 +1,18 @@
 <?php declare(strict_types = 1);
 
-namespace AES\Context;
+namespace AES\Context\OCB;
 
-use AES\Context;
-
-class OCB extends Context
+abstract class Context
 {
     public $key;
 
     public $lstar;
     public $ldollar;
 
-    public $messageSum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-    public $messageOffset; // Calculated during init
-    public $messageBlock = 0;
-    public $messageBuffer = '';
+    public $cryptSum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+    public $cryptOffset; // Calculated during init
+    public $cryptIndex = 0;
+    public $cryptBuffer = '';
     
     public $aadSum = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
     public $aadOffset = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";

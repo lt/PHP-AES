@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\Mode\CFB;
+use AES\CFB;
 use AES\Key;
 
 class CFB128VarTxt192Test extends \PHPUnit_Framework_TestCase
@@ -155,7 +155,7 @@ class CFB128VarTxt192Test extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cfb = new CFB;
-        $ctx = $cfb->init($key, hex2bin($iv));
+        $ctx = $cfb->initEncryption($key, hex2bin($iv));
         $result = $cfb->encrypt($ctx, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
@@ -167,7 +167,7 @@ class CFB128VarTxt192Test extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cfb = new CFB;
-        $ctx = $cfb->init($key, hex2bin($iv));
+        $ctx = $cfb->initDecryption($key, hex2bin($iv));
         $result = $cfb->decrypt($ctx, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }

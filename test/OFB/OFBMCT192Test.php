@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\Mode\OFB;
+use AES\OFB;
 use AES\Key;
 
 class OFBMCT192 extends \PHPUnit_Framework_TestCase
@@ -233,7 +233,7 @@ class OFBMCT192 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $ofb = new OFB;
-        $ctx = $ofb->init($key, hex2bin($iv));
+        $ctx = $ofb->initEncryption($key, hex2bin($iv));
         $lastCiphertext = hex2bin($plaintext);
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
@@ -257,7 +257,7 @@ class OFBMCT192 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $ofb = new OFB;
-        $ctx = $ofb->init($key, hex2bin($iv));
+        $ctx = $ofb->initDecryption($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
         $nextCiphertext = $ofb->decrypt($ctx, $lastPlaintext);

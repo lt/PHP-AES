@@ -2,7 +2,7 @@
 
 namespace AES\Test;
 
-use AES\Mode\OCB;
+use AES\OCB;
 use AES\Key;
 
 class OCBTest extends \PHPUnit_Framework_TestCase
@@ -40,7 +40,7 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
 
-        $ctx = $ocb->init($key, hex2bin($nonce));
+        $ctx = $ocb->initEncryption($key, hex2bin($nonce));
         $ocb->aad($ctx, hex2bin($aad));
 
         $result = $ocb->encrypt($ctx, hex2bin($plaintext));
@@ -60,7 +60,7 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
 
-        $ctx = $ocb->init($key, hex2bin($nonce));
+        $ctx = $ocb->initDecryption($key, hex2bin($nonce));
         $ocb->aad($ctx, hex2bin($aad));
 
         $result = $ocb->decrypt($ctx, hex2bin($ciphertext));
@@ -79,7 +79,7 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
 
-        $ctx = $ocb->init($key, hex2bin($nonce));
+        $ctx = $ocb->initEncryption($key, hex2bin($nonce));
 
         $data = str_split(hex2bin($aad), 7);
         foreach ($data as $chunk) {
@@ -107,7 +107,7 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
 
-        $ctx = $ocb->init($key, hex2bin($nonce));
+        $ctx = $ocb->initDecryption($key, hex2bin($nonce));
 
         $data = str_split(hex2bin($aad), 7);
         foreach ($data as $chunk) {

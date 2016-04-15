@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\Mode\ECB;
+use AES\ECB;
 use AES\Key;
 
 class ECBMCT256 extends \PHPUnit_Framework_TestCase

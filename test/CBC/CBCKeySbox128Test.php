@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\Mode\CBC;
+use AES\CBC;
 use AES\Key;
 
 class CBCKeySbox128 extends \PHPUnit_Framework_TestCase
@@ -48,7 +48,7 @@ class CBCKeySbox128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cbc = new CBC;
-        $ctx = $cbc->init($key, hex2bin($iv));
+        $ctx = $cbc->initEncryption($key, hex2bin($iv));
         $result = $cbc->encrypt($ctx, hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
@@ -60,7 +60,7 @@ class CBCKeySbox128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cbc = new CBC;
-        $ctx = $cbc->init($key, hex2bin($iv));
+        $ctx = $cbc->initDecryption($key, hex2bin($iv));
         $result = $cbc->decrypt($ctx, hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }

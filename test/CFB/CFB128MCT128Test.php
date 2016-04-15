@@ -9,7 +9,7 @@
 
 namespace AES\Test;
 
-use AES\Mode\CFB;
+use AES\CFB;
 use AES\Key;
 
 class CFB128MCT128 extends \PHPUnit_Framework_TestCase
@@ -233,7 +233,7 @@ class CFB128MCT128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cfb = new CFB;
-        $ctx = $cfb->init($key, hex2bin($iv));
+        $ctx = $cfb->initEncryption($key, hex2bin($iv));
         $lastCiphertext = hex2bin($plaintext);
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
@@ -257,7 +257,7 @@ class CFB128MCT128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cfb = new CFB;
-        $ctx = $cfb->init($key, hex2bin($iv));
+        $ctx = $cfb->initDecryption($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
         $nextCiphertext = $cfb->decrypt($ctx, $lastPlaintext);
