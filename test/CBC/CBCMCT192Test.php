@@ -238,11 +238,11 @@ class CBCMCT192 extends \PHPUnit_Framework_TestCase
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
 
-        $nextPlaintext = $cbc->encrypt($ctx, $lastCiphertext);
+        $nextPlaintext = $cbc->streamEncrypt($ctx, $lastCiphertext);
         $lastCiphertext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisCiphertext = $cbc->encrypt($ctx, $lastCiphertext);
+            $thisCiphertext = $cbc->streamEncrypt($ctx, $lastCiphertext);
             $lastCiphertext = $nextPlaintext;
             $nextPlaintext = $thisCiphertext;
         }
@@ -260,11 +260,11 @@ class CBCMCT192 extends \PHPUnit_Framework_TestCase
         $ctx = $cbc->initDecryption($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
-        $nextCiphertext = $cbc->decrypt($ctx, $lastPlaintext);
+        $nextCiphertext = $cbc->streamDecrypt($ctx, $lastPlaintext);
         $lastPlaintext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisPlaintext = $cbc->decrypt($ctx, $lastPlaintext);
+            $thisPlaintext = $cbc->streamDecrypt($ctx, $lastPlaintext);
             $lastPlaintext = $nextCiphertext;
             $nextCiphertext = $thisPlaintext;
         }

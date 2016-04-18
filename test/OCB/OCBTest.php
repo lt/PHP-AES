@@ -35,18 +35,12 @@ class OCBTest extends \PHPUnit_Framework_TestCase
     /**
      * @dataProvider caseProvider
      */
-    function testEncrypt($nonce, $aad, $plaintext, $ciphertext, $tag)
+    function testEncrypt($iv, $aad, $plaintext, $ciphertext, $tag)
     {
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
 
-        $ctx = $ocb->initEncryption($key, hex2bin($nonce));
-        $ocb->aad($ctx, hex2bin($aad));
-
-        $result = $ocb->encrypt($ctx, hex2bin($plaintext));
-        $result .= $ocb->finalise($ctx);
-
-        $resultTag = $ocb->tag($ctx);
+        list($result, $resultTag) = $ocb->encrypt($key, hex2bin($iv), hex2bin($aad), hex2bin($plaintext));
 
         $this->assertSame(hex2bin($ciphertext), $result);
         $this->assertSame(hex2bin($tag), $resultTag);
@@ -55,31 +49,25 @@ class OCBTest extends \PHPUnit_Framework_TestCase
     /**
      * @dataProvider caseProvider
      */
-    function testDecrypt($nonce, $aad, $plaintext, $ciphertext, $tag)
+    function testDecrypt($iv, $aad, $plaintext, $ciphertext, $tag)
     {
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
 
-        $ctx = $ocb->initDecryption($key, hex2bin($nonce));
-        $ocb->aad($ctx, hex2bin($aad));
-
-        $result = $ocb->decrypt($ctx, hex2bin($ciphertext));
-        $result .= $ocb->finalise($ctx);
-        $resultTag = $ocb->tag($ctx);
+        $result = $ocb->decrypt($key, hex2bin($iv), hex2bin($aad), hex2bin($ciphertext), hex2bin($tag));
 
         $this->assertSame(hex2bin($plaintext), $result);
-        $this->assertSame(hex2bin($tag), $resultTag);
     }
 
     /**
      * @dataProvider caseProvider
      */
-    function testEncryptMultiMessage($nonce, $aad, $plaintext, $ciphertext, $tag)
+    function testEncryptMultiMessage($iv, $aad, $plaintext, $ciphertext, $tag)
     {
         $key = new Key(hex2bin($this->key));
         $ocb = new OCB();
 
-        $ctx = $ocb->initEncryption($key, hex2bin($nonce));
+        $ctx = $ocb->initEncryption($key, hex2bin($iv));
 
         $data = str_split(hex2bin($aad), 7);
         foreach ($data as $chunk) {
@@ -89,7 +77,7 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $result = '';
         $plain = str_split(hex2bin($plaintext), 7);
         foreach ($plain as $chunk) {
-            $result .= $ocb->encrypt($ctx, $chunk);
+            $result .= $ocb->streamEncrypt($ctx, $chunk);
         }
 
         $result .= $ocb->finalise($ctx);
@@ -117,7 +105,7 @@ class OCBTest extends \PHPUnit_Framework_TestCase
         $result = '';
         $cipher = str_split(hex2bin($ciphertext), 7);
         foreach ($cipher as $chunk) {
-            $result .= $ocb->decrypt($ctx, $chunk);
+            $result .= $ocb->streamDecrypt($ctx, $chunk);
         }
 
         $result .= $ocb->finalise($ctx);

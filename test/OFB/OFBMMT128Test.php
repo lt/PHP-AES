@@ -53,8 +53,7 @@ class OFBMMT128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $ofb = new OFB;
-        $ctx = $ofb->initEncryption($key, hex2bin($iv));
-        $result = $ofb->encrypt($ctx, hex2bin($plaintext));
+        $result = $ofb->encrypt($key, hex2bin($iv), hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -65,8 +64,7 @@ class OFBMMT128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $ofb = new OFB;
-        $ctx = $ofb->initDecryption($key, hex2bin($iv));
-        $result = $ofb->decrypt($ctx, hex2bin($ciphertext));
+        $result = $ofb->decrypt($key, hex2bin($iv), hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

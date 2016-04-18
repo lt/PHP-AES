@@ -35,7 +35,7 @@ class CBC extends Cipher
         return $context;
     }
 
-    function encrypt(EncryptionContext $context, string $message): string
+    function streamEncrypt(EncryptionContext $context, string $message): string
     {
         $ciphertext = '';
 
@@ -57,7 +57,7 @@ class CBC extends Cipher
         return $ciphertext;
     }
 
-    function decrypt(DecryptionContext $context, string $message): string
+    function streamDecrypt(DecryptionContext $context, string $message): string
     {
         $plaintext = '';
 
@@ -77,5 +77,17 @@ class CBC extends Cipher
         $context->iv = $iv;
 
         return $plaintext;
+    }
+
+    function encrypt(Key $key, string $iv, string $message): string
+    {
+        $context = $this->initEncryption($key, $iv);
+        return $this->streamEncrypt($context, $message);
+    }
+
+    function decrypt(Key $key, string $iv, string $message): string
+    {
+        $context = $this->initDecryption($key, $iv);
+        return $this->streamDecrypt($context, $message);
     }
 }

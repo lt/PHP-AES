@@ -283,8 +283,7 @@ class CFB128VarKey256Test extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cfb = new CFB;
-        $ctx = $cfb->initEncryption($key, hex2bin($iv));
-        $result = $cfb->encrypt($ctx, hex2bin($plaintext));
+        $result = $cfb->encrypt($key, hex2bin($iv), hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -295,8 +294,7 @@ class CFB128VarKey256Test extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cfb = new CFB;
-        $ctx = $cfb->initDecryption($key, hex2bin($iv));
-        $result = $cfb->decrypt($ctx, hex2bin($ciphertext));
+        $result = $cfb->decrypt($key, hex2bin($iv), hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

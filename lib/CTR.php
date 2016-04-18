@@ -21,17 +21,17 @@ class CTR extends Cipher
         $context->nonce = array_values(unpack('N4', $nonce));
     }
 
-    function initEncryption(Key $key, string $iv): EncryptionContext
+    function initEncryption(Key $key, string $nonce): EncryptionContext
     {
         $context = new EncryptionContext;
-        $this->init($context, $key, $iv);
+        $this->init($context, $key, $nonce);
         return $context;
     }
 
-    function initDecryption(Key $key, string $iv): DecryptionContext
+    function initDecryption(Key $key, string $nonce): DecryptionContext
     {
         $context = new DecryptionContext;
-        $this->init($context, $key, $iv);
+        $this->init($context, $key, $nonce);
         return $context;
     }
     
@@ -62,13 +62,25 @@ class CTR extends Cipher
         return $message ^ $keyStream;
     }
     
-    function encrypt(EncryptionContext $ctx, string $message): string
+    function streamEncrypt(EncryptionContext $ctx, string $message): string
     {
         return $this->transcrypt($ctx, $message);
     }
 
-    function decrypt(DecryptionContext $ctx, string $message): string
+    function streamDecrypt(DecryptionContext $ctx, string $message): string
     {
         return $this->transcrypt($ctx, $message);
+    }
+
+    function encrypt(Key $key, string $nonce, string $message): string
+    {
+        $context = $this->initEncryption($key, $nonce);
+        return $this->streamEncrypt($context, $message);
+    }
+
+    function decrypt(Key $key, string $nonce, string $message): string
+    {
+        $context = $this->initDecryption($key, $nonce);
+        return $this->streamDecrypt($context, $message);
     }
 } 

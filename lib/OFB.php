@@ -55,13 +55,25 @@ class OFB extends Cipher
         return $message ^ $keyStream;
     }
 
-    function encrypt(EncryptionContext $context, string $message): string
+    function streamEncrypt(EncryptionContext $context, string $message): string
     {
         return $this->transcrypt($context, $message);
     }
 
-    function decrypt(DecryptionContext $context, string $message): string
+    function streamDecrypt(DecryptionContext $context, string $message): string
     {
         return $this->transcrypt($context, $message);
+    }
+
+    function encrypt(Key $key, string $iv, string $message): string
+    {
+        $context = $this->initEncryption($key, $iv);
+        return $this->streamEncrypt($context, $message);
+    }
+
+    function decrypt(Key $key, string $iv, string $message): string
+    {
+        $context = $this->initDecryption($key, $iv);
+        return $this->streamDecrypt($context, $message);
     }
 } 

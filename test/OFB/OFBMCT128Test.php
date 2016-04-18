@@ -238,11 +238,11 @@ class OFBMCT128 extends \PHPUnit_Framework_TestCase
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
 
-        $nextPlaintext = $ofb->encrypt($ctx, $lastCiphertext);
+        $nextPlaintext = $ofb->streamEncrypt($ctx, $lastCiphertext);
         $lastCiphertext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisCiphertext = $ofb->encrypt($ctx, $lastCiphertext);
+            $thisCiphertext = $ofb->streamEncrypt($ctx, $lastCiphertext);
             $lastCiphertext = $nextPlaintext;
             $nextPlaintext = $thisCiphertext;
         }
@@ -260,11 +260,11 @@ class OFBMCT128 extends \PHPUnit_Framework_TestCase
         $ctx = $ofb->initDecryption($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
-        $nextCiphertext = $ofb->decrypt($ctx, $lastPlaintext);
+        $nextCiphertext = $ofb->streamDecrypt($ctx, $lastPlaintext);
         $lastPlaintext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisPlaintext = $ofb->decrypt($ctx, $lastPlaintext);
+            $thisPlaintext = $ofb->streamDecrypt($ctx, $lastPlaintext);
             $lastPlaintext = $nextCiphertext;
             $nextCiphertext = $thisPlaintext;
         }

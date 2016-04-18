@@ -108,7 +108,7 @@ class OCB extends Cipher
         $context->aadBuffer = substr($aad, $blockOffset);
     }
 
-    function encrypt(EncryptionContext $context, string $message): string
+    function streamEncrypt(EncryptionContext $context, string $message): string
     {
         if ($context->finalised) {
             throw new InvalidContextException('Cannot process more data after finalise() has been called.');
@@ -142,7 +142,7 @@ class OCB extends Cipher
         return $ciphertext;
     }
 
-    function decrypt(DecryptionContext $context, string $message): string
+    function streamDecrypt(DecryptionContext $context, string $message): string
     {
         if ($context->finalised) {
             throw new InvalidContextException('Cannot process more data after finalise() has been called.');
@@ -174,7 +174,29 @@ class OCB extends Cipher
         
         return $plaintext;
     }
-    
+
+    function encrypt(Key $key, string $iv, string $aad, string $message): array
+    {
+        $context = $this->initEncryption($key, $iv);
+        $this->aad($context, $aad);
+
+        return [
+            $this->streamEncrypt($context, $message) . $this->finalise($context),
+            $this->tag($context)
+        ];
+    }
+
+    function decrypt(Key $key, string $iv, string $aad, string $message, string $tag): string
+    {
+        $context = $this->initDecryption($key, $iv);
+        $this->aad($context, $aad);
+
+        $plaintext = $this->streamDecrypt($context, $message) . $this->finalise($context);
+        $this->verify($context, $tag);
+
+        return $plaintext;
+    }
+
     function finalise(Context $context): string
     {
         if ($context->finalised) {
@@ -211,7 +233,7 @@ class OCB extends Cipher
         return substr($tag, 0, self::TAGBYES);
     }
 
-    function verify(Context $ctx, string $tag): string
+    function verify(Context $ctx, string $tag)
     {
         if (!hash_equals($this->tag($ctx), $tag)) {
             throw new AuthenticationException;

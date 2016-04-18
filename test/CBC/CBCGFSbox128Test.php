@@ -34,8 +34,7 @@ class CBCGFSbox128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cbc = new CBC;
-        $ctx = $cbc->initEncryption($key, hex2bin($iv));
-        $result = $cbc->encrypt($ctx, hex2bin($plaintext));
+        $result = $cbc->encrypt($key, hex2bin($iv), hex2bin($plaintext));
         $this->assertSame(hex2bin($ciphertext), $result);
     }
 
@@ -46,8 +45,7 @@ class CBCGFSbox128 extends \PHPUnit_Framework_TestCase
     {
         $key = new Key(hex2bin($key));
         $cbc = new CBC;
-        $ctx = $cbc->initDecryption($key, hex2bin($iv));
-        $result = $cbc->decrypt($ctx, hex2bin($ciphertext));
+        $result = $cbc->decrypt($key, hex2bin($iv), hex2bin($ciphertext));
         $this->assertSame(hex2bin($plaintext), $result);
     }
 }

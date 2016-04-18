@@ -238,11 +238,11 @@ class CFB128MCT256 extends \PHPUnit_Framework_TestCase
 
         // http://csrc.nist.gov/groups/STM/cavp/documents/aes/AESAVS.pdf 6.4.2 --- OK...
 
-        $nextPlaintext = $cfb->encrypt($ctx, $lastCiphertext);
+        $nextPlaintext = $cfb->streamEncrypt($ctx, $lastCiphertext);
         $lastCiphertext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisCiphertext = $cfb->encrypt($ctx, $lastCiphertext);
+            $thisCiphertext = $cfb->streamEncrypt($ctx, $lastCiphertext);
             $lastCiphertext = $nextPlaintext;
             $nextPlaintext = $thisCiphertext;
         }
@@ -260,11 +260,11 @@ class CFB128MCT256 extends \PHPUnit_Framework_TestCase
         $ctx = $cfb->initDecryption($key, hex2bin($iv));
         $lastPlaintext = hex2bin($ciphertext);
 
-        $nextCiphertext = $cfb->decrypt($ctx, $lastPlaintext);
+        $nextCiphertext = $cfb->streamDecrypt($ctx, $lastPlaintext);
         $lastPlaintext = hex2bin($iv);
 
         for ($i = 1; $i < 1000; $i++) {
-            $thisPlaintext = $cfb->decrypt($ctx, $lastPlaintext);
+            $thisPlaintext = $cfb->streamDecrypt($ctx, $lastPlaintext);
             $lastPlaintext = $nextCiphertext;
             $nextCiphertext = $thisPlaintext;
         }
