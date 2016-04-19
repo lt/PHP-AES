@@ -37,36 +37,49 @@ The following padding schemes are available:
 
 ### Usage:
 
-To use any mode of operation you need to create an appropriate `Context`. The context keeps track of the state of processing, allowing longer messages to be processed in multiple blocks.
+All modes have one-shot `encrypt()` and `decrypt()` methods which accept different parameters depending on the mode.
+
+Example:
+
+```php
+$key = new AES\Key('abcdefghijklmnop');
+$nonce = 'abcdefghijklmnop';
+
+$ctr = new AES\CTR;
+$ciphertext = $ctr->encrypt($key, $nonce, $plaintext);
+```
+
+All modes also have streaming capabilities allowing encryption/decryption to be done in chunks.
+
+To use any mode of operation like this an appropriate `Context` needs to be initialised first. The context keeps track of state allowing longer messages to be processed in multiple blocks.
 
 Separate contexts are required for encryption and decryption.
 
-Basic modes can be used as follows:
-
-```
+Example:
+```php
 $key = new AES\Key('abcdefghijklmnop');
 $nonce = 'abcdefghijklmnop';
 
 $ctr = new AES\CTR;
 $encryptionContext = $ctr->initEncryption($key, $nonce);
 
-$ciphertext = $ctr->encrypt($encryptionContext, $plaintext0);
-$ciphertext .= $ctr->encrypt($encryptionContext, $plaintext1);
+$ciphertext = $ctr->streamEncrypt($encryptionContext, $plaintext0);
+$ciphertext .= $ctr->streamEncrypt($encryptionContext, $plaintext1);
 ```
 
 AEAD modes are slightly more complicated.
 
-OCB
- - AAD can be processed at any time
- - `encrypt()` and `decrypt()` will output aligned to 16-byte blocks and `finalise()` returns the final piece of ciphertext/plaintext.
+A few caveats:
+- OCB when streaming can process AAD at any time
+- GCM when streaming has to process AAD first
+- GCM only validates the tag prior to decryption when using the one-shot `decrypt()`. It can't do this with `streamDecrypt()` because it doesn't have all of the data yet.
+- GCM has a significant initialisation overhead (time and memory) which is key dependant. If you plan to re-use the same key with different nonces you can use the `reInit()` method
+- OCB and GCM one-shot `encrypt()` returns an array of `[$ciphertext, $tag]`
+- OCB and GCM when streaming will output aligned to 16-byte blocks and `finalise()` returns the final piece of ciphertext/plaintext. // TODO: Fix for GCM, OCB doesn't seem possible
 
-GCM
- - AAD has to be processed first.
- - `encrypt()` and `decrypt()` will output the same amount as input
+Example stream usage:
 
-
-
-```
+```php
 $key = new AES\Key('abcdefghijklmnop');
 $nonce = 'abcdefghijkl'; // 12 byte nonce for GCM
 $aad = 'Hello'
@@ -74,15 +87,13 @@ $aad = 'Hello'
 $gcm = new AES\GCM;
 $encryptionContext = $gcm->initEncryption($key, $nonce);
 
-$gcm->aad($aad);
-$gcm->aad($aad);
+$gcm->aad($aad0);
+$gcm->aad($aad1);
 
-$ciphertext = $ctr->encrypt($encryptionContext, $plaintext0);
-$ciphertext .= $ctr->encrypt($encryptionContext, $plaintext1);
+$ciphertext = $gcm->streamEncrypt($encryptionContext, $plaintext0);
+$ciphertext .= $gcm->streamEncrypt($encryptionContext, $plaintext1);
+$ciphertext .= $gcm->finalise($context);
 
-$gcm->finalise($context);
-
-// $gcm->authenticate($context, $tag); // If decrypting
+// $gcm->verify($context, $tag); // If decrypting
 $tag = $gcm->tag($context);
 ```
-
