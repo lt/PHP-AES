@@ -56,7 +56,7 @@ class CFB extends Cipher
         $bytesOver = $bytesRequired % 16;
 
         $blockCount = ($bytesRequired >> 4) + ($bytesOver > 0);
-        while ($blockCount--) {
+        while ($blockCount-- > 0) {
             $messageBlock = substr($message, $messageOffset, 16);
             $keyStream = $this->encryptBlock($context->key, $iv);
 

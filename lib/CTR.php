@@ -44,7 +44,7 @@ class CTR extends Cipher
         $bytesOver = $bytesRequired % 16;
 
         $blockCount = ($bytesRequired >> 4) + ($bytesOver > 0);
-        while ($blockCount--) {
+        while ($blockCount-- > 0) {
             $keyStream .= $this->encryptBlock($context->key, pack('N4', ...$nonce));
 
             for($i = 3; $i >= 0; $i--) {

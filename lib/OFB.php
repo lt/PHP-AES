@@ -44,7 +44,7 @@ class OFB extends Cipher
         $bytesOver = $bytesRequired % 16;
 
         $blockCount = ($bytesRequired >> 4) + ($bytesOver > 0);
-        while ($blockCount--) {
+        while ($blockCount-- > 0) {
             $iv = $this->encryptBlock($context->key, $iv);
             $keyStream .= $iv;
         }
