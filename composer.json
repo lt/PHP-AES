@@ -1,5 +1,5 @@
 {
-    "name": "leigh/PHP-AES",
+    "name": "leigh/php-aes",
     "homepage": "https://github.com/lt/PHP-AES",
     "description": "Pure PHP implementation of the AES cipher.",
     "require": {
